@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "dev": "wails3 dev",
+    "build": "wails3 build",
+    "package": "wails3 package"
+  }
+}
