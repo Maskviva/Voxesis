@@ -5,33 +5,34 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	vconfig "voxesis/src/Common/Config"
 )
 
-// BasePropertiesImpl Properties配置文件管理类，继承自BaseConfig
+// BasePropertiesImpl Properties配置文件管理类，继承自BaseConfigImpl
 type BasePropertiesImpl struct {
-	*BaseConfig // 嵌入基础配置类
+	*BaseConfigImpl // 嵌入基础配置类
 }
 
 // NewBasePropertiesImpl 创建新的Properties配置实例
 func NewBasePropertiesImpl(filePath string) (*BasePropertiesImpl, error) {
 	// 创建基础配置实例
-	baseConfig, err := NewBaseConfig(filePath)
+	BaseConfigImpl, err := NewBaseConfigImpl(filePath)
 	if err != nil {
 		return nil, err
 	}
 
 	// 验证Properties文件内容
-	if err := validateProperties(baseConfig); err != nil {
+	if err := validateProperties(BaseConfigImpl); err != nil {
 		return nil, err
 	}
 
 	return &BasePropertiesImpl{
-		BaseConfig: baseConfig,
+		BaseConfigImpl: BaseConfigImpl,
 	}, nil
 }
 
 // validateProperties 验证Properties文件内容
-func validateProperties(config *BaseConfig) error {
+func validateProperties(config *BaseConfigImpl) error {
 	data, err := config.Get()
 	if err != nil {
 		return err
@@ -236,3 +237,6 @@ func (p *BasePropertiesImpl) WatchProperty(ctx context.Context, key string, call
 		}
 	})
 }
+
+// 验证接口实现
+var _ vconfig.BaseProperties = (*BasePropertiesImpl)(nil)

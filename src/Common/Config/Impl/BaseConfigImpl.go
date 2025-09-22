@@ -6,20 +6,21 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+	vconfig "voxesis/src/Common/Config"
 
 	"github.com/fsnotify/fsnotify"
 )
 
-// BaseConfig 配置文件基础类，提供通用的文件操作和监听功能
-type BaseConfig struct {
+// BaseConfigImpl 配置文件基础类，提供通用的文件操作和监听功能
+type BaseConfigImpl struct {
 	filePath string            // 配置文件路径
 	watcher  *fsnotify.Watcher // 文件监听器
 	mutex    sync.RWMutex      // 读写锁，保护文件访问
 }
 
-// NewBaseConfig 创建新的基础配置实例
+// NewBaseConfigImpl 创建新的基础配置实例
 // 确保配置文件和目录存在，并初始化监听器
-func NewBaseConfig(filePath string) (*BaseConfig, error) {
+func NewBaseConfigImpl(filePath string) (*BaseConfigImpl, error) {
 	// 确保目录存在
 	dir := filepath.Dir(filePath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -39,34 +40,34 @@ func NewBaseConfig(filePath string) (*BaseConfig, error) {
 		return nil, err
 	}
 
-	return &BaseConfig{
+	return &BaseConfigImpl{
 		filePath: filePath,
 		watcher:  watcher,
 	}, nil
 }
 
 // Get 读取配置文件内容
-func (c *BaseConfig) Get() ([]byte, error) {
+func (c *BaseConfigImpl) Get() ([]byte, error) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 	return os.ReadFile(c.filePath)
 }
 
 // Set 写入数据到配置文件
-func (c *BaseConfig) Set(data []byte) error {
+func (c *BaseConfigImpl) Set(data []byte) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	return os.WriteFile(c.filePath, data, 0644)
 }
 
 // Path 获取配置文件路径
-func (c *BaseConfig) Path() string {
+func (c *BaseConfigImpl) Path() string {
 	return c.filePath
 }
 
 // Watch 监听配置文件变更
 // 当文件被修改或创建时，会触发回调函数
-func (c *BaseConfig) Watch(ctx context.Context, callback func([]byte)) error {
+func (c *BaseConfigImpl) Watch(ctx context.Context, callback func([]byte)) error {
 	// 添加文件到监听器
 	if err := c.watcher.Add(c.filePath); err != nil {
 		return err
@@ -116,6 +117,9 @@ func (c *BaseConfig) Watch(ctx context.Context, callback func([]byte)) error {
 }
 
 // Close 关闭配置监听器，释放资源
-func (c *BaseConfig) Close() error {
+func (c *BaseConfigImpl) Close() error {
 	return c.watcher.Close()
 }
+
+// 验证接口实现
+var _ vconfig.BaseConfig = (*BaseConfigImpl)(nil)

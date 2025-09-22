@@ -1,0 +1,239 @@
+/*
+ * Voxesis 通用样式系统
+ * 模块化、可扩展的样式架构
+ */
+
+/* CSS自定义属性范围定义 */
+:root {
+    /* === 核心设计系统 === */
+
+    /* 基础间距单位 */
+    --spacing-xxs: 0.25rem;
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 0.75rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-xxl: 3rem;
+
+    /* 基础圆角 */
+    --radius-xs: 0.125rem;
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-full: 9999px;
+
+    /* 基础字体大小 */
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-md: 1.125rem;
+    --font-size-lg: 1.25rem;
+    --font-size-xl: 1.5rem;
+    --font-size-xxl: 2rem;
+    --font-size-xxxl: 3rem;
+
+    /* 字体粗细 */
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* 阴影 */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+    /* 过渡动画 */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* 断点 */
+    --breakpoint-sm: 30rem;    /* 480px */
+    --breakpoint-md: 48rem;    /* 768px */
+    --breakpoint-lg: 64rem;    /* 1024px */
+    --breakpoint-xl: 80rem;    /* 1280px */
+
+    /* === 语义化颜色系统 === */
+
+    /* 基础调色板 */
+    --palette-white: #ffffff;
+    --palette-black: #000000;
+    --palette-gray-50: #f9fafb;
+    --palette-gray-100: #f3f4f6;
+    --palette-gray-200: #e5e7eb;
+    --palette-gray-300: #d1d5db;
+    --palette-gray-400: #9ca3af;
+    --palette-gray-500: #6b7280;
+    --palette-gray-600: #4b5563;
+    --palette-gray-700: #374151;
+    --palette-gray-800: #1f2937;
+    --palette-gray-900: #111827;
+
+    --palette-red-50: #fef2f2;
+    --palette-red-100: #fee2e2;
+    --palette-red-400: #f87171;
+    --palette-red-500: #ef4444;
+    --palette-red-600: #dc2626;
+
+    --palette-green-50: #f0fdf4;
+    --palette-green-100: #dcfce7;
+    --palette-green-400: #4ade80;
+    --palette-green-500: #22c55e;
+    --palette-green-600: #16a34a;
+
+    --palette-blue-50: #eff6ff;
+    --palette-blue-100: #dbeafe;
+    --palette-blue-500: #3b82f6;
+    --palette-blue-600: #2563eb;
+
+    --palette-yellow-400: #fbbf24;
+    --palette-yellow-500: #f59e0b;
+
+    /* 语义化颜色变量 */
+    --color-background: ;
+    --color-background-secondary: ;
+    --color-background-tertiary: ;
+    --color-background-elevated: ;
+    --color-background-overlay: ;
+
+    --color-text: ;
+    --color-text-secondary: ;
+    --color-text-tertiary: ;
+    --color-text-inverse: ;
+
+    --color-border: ;
+    --color-border-secondary: ;
+
+    --color-primary: ;
+    --color-primary-hover: ;
+    --color-primary-active: ;
+    --color-primary-disabled: ;
+
+    --color-success: ;
+    --color-warning: ;
+    --color-error: ;
+
+    --color-focus-ring: ;
+
+    /* 滚动条 */
+    --color-scrollbar-thumb: ;
+    --color-scrollbar-thumb-hover: ;
+
+    /* 阴影 */
+    --shadow-default: ;
+    --shadow-hover: ;
+}
+
+/* === 主题定义 === */
+
+/* 默认/亮色主题 */
+[data-theme="light"],
+:root {
+    --color-background: var(--palette-white);
+    --color-background-secondary: var(--palette-gray-100);
+    --color-background-tertiary: var(--palette-gray-200);
+    --color-background-elevated: var(--palette-white);
+    --color-background-overlay: rgba(0, 0, 0, 0.5);
+
+    --color-text: var(--palette-gray-900);
+    --color-text-secondary: var(--palette-gray-600);
+    --color-text-tertiary: var(--palette-gray-500);
+    --color-text-inverse: var(--palette-white);
+
+    --color-border: var(--palette-gray-300);
+    --color-border-secondary: var(--palette-gray-200);
+
+    --color-primary: #42b883;
+    --color-primary-hover: #34a773;
+    --color-primary-active: #2a8c61;
+    --color-primary-disabled: #a8d8c1;
+
+    --color-success: var(--palette-green-500);
+    --color-warning: var(--palette-yellow-500);
+    --color-error: var(--palette-red-500);
+
+    --color-focus-ring: rgba(66, 184, 131, 0.5);
+
+    --color-scrollbar-thumb: var(--palette-gray-300);
+    --color-scrollbar-thumb-hover: var(--palette-gray-400);
+
+    --shadow-default: var(--shadow-md);
+    --shadow-hover: var(--shadow-lg);
+}
+
+/* 暗色主题 */
+[data-theme="dark"] {
+    --color-background: var(--palette-gray-900);
+    --color-background-secondary: var(--palette-gray-800);
+    --color-background-tertiary: var(--palette-gray-700);
+    --color-background-elevated: var(--palette-gray-800);
+    --color-background-overlay: rgba(0, 0, 0, 0.7);
+
+    --color-text: var(--palette-gray-100);
+    --color-text-secondary: var(--palette-gray-300);
+    --color-text-tertiary: var(--palette-gray-400);
+    --color-text-inverse: var(--palette-gray-900);
+
+    --color-border: var(--palette-gray-700);
+    --color-border-secondary: var(--palette-gray-800);
+
+    --color-primary: #42b883;
+    --color-primary-hover: #4fd69c;
+    --color-primary-active: #3ba56d;
+    --color-primary-disabled: #2a5c45;
+
+    --color-success: var(--palette-green-400);
+    --color-warning: var(--palette-yellow-400);
+    --color-error: var(--palette-red-400);
+
+    --color-focus-ring: rgba(66, 184, 131, 0.7);
+
+    --color-scrollbar-thumb: var(--palette-gray-600);
+    --color-scrollbar-thumb-hover: var(--palette-gray-500);
+
+    --shadow-default: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+}
+
+/* 磨砂玻璃主题 */
+[data-theme="frosted-glass"] {
+    --color-background: rgba(240, 240, 240, 0.1);
+    --color-background-secondary: rgba(255, 255, 255, 0.3);
+    --color-background-tertiary: rgba(255, 255, 255, 0.5);
+    --color-background-elevated: rgba(255, 255, 255, 0.65);
+    --color-background-overlay: rgba(0, 0, 0, 0.3);
+
+    --color-text: #333333;
+    --color-text-secondary: #555555;
+    --color-text-tertiary: #777777;
+    --color-text-inverse: #ffffff;
+
+    --color-border: rgba(0, 0, 0, 0.15);
+    --color-border-secondary: rgba(0, 0, 0, 0.1);
+
+    --color-primary: #4285f4;
+    --color-primary-hover: #5a95f5;
+    --color-primary-active: #3367d6;
+    --color-primary-disabled: #a7c3f0;
+
+    --color-success: #34a853;
+    --color-warning: #fbbc05;
+    --color-error: #ea4335;
+
+    --color-focus-ring: rgba(66, 133, 244, 0.5);
+
+    --color-scrollbar-thumb: rgba(0, 0, 0, 0.2);
+    --color-scrollbar-thumb-hover: rgba(0, 0, 0, 0.3);
+
+    --shadow-default: 0 4px 30px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.15);
+
+    /* 磨砂玻璃效果 */
+    --backdrop-filter: blur(10px);
+    --header-backdrop-filter: blur(12px);
+    --card-backdrop-filter: blur(8px);
+}

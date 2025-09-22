@@ -2,6 +2,7 @@ package InterProcess
 
 import (
 	"fmt"
+	"os"
 	"path"
 	vcommon "voxesis/src/Common"
 	entity "voxesis/src/Common/Entity"
@@ -15,16 +16,30 @@ type OrdinaryProcessIpc struct {
 	uuidMap map[string]*process.OrdinaryProcess
 }
 
-func findOrdinaryProcess(p *OrdinaryProcessIpc, uuid string) (bool, *process.OrdinaryProcess) {
-	logger, ok := p.uuidMap[uuid]
+func findOrdinaryProcess(p *OrdinaryProcessIpc, uuid string) (*string, *process.OrdinaryProcess) {
+	ordinaryProcess, ok := p.uuidMap[uuid]
 	if !ok {
-		return false, nil
+		err := fmt.Sprintf("未找到uuid为 %s 的OrdinaryProcess实例", uuid)
+		return &err, nil
 	}
 
-	return true, logger
+	return nil, ordinaryProcess
 }
 
-func (p *OrdinaryProcessIpc) NewOrdinaryProcess(relPath string) *string {
+func (p *OrdinaryProcessIpc) NewOrdinaryProcess(relPath string, abs bool) (*string, *string) {
+	if p.uuidMap == nil {
+		p.uuidMap = make(map[string]*process.OrdinaryProcess)
+	}
+
+	if !abs {
+		relPath = path.Join(vcommon.AppDir, relPath)
+	}
+
+	if _, err := os.Stat(relPath); os.IsNotExist(err) {
+		e := fmt.Sprintf("文件路径 %s 不存在", relPath)
+		return nil, &e
+	}
+
 	u := uuid.New()
 	uuidStr := u.String()
 
@@ -32,15 +47,14 @@ func (p *OrdinaryProcessIpc) NewOrdinaryProcess(relPath string) *string {
 
 	p.uuidMap[uuidStr] = process.NewOrdinaryProcess(pPath)
 
-	return &uuidStr
+	return &uuidStr, nil
 }
 
 func (p *OrdinaryProcessIpc) OrdinaryProcessStart(uuid string, outputEventName string, args []string) *string {
-	ok, ordinaryProcess := findOrdinaryProcess(p, uuid)
+	ferr, ordinaryProcess := findOrdinaryProcess(p, uuid)
 
-	if !ok {
-		err := fmt.Sprintf("未找到uuid为 %s 的OrdinaryProcess实例", uuid)
-		return &err
+	if ferr != nil {
+		return ferr
 	}
 
 	err := ordinaryProcess.Start(func(log string) {
@@ -57,11 +71,10 @@ func (p *OrdinaryProcessIpc) OrdinaryProcessStart(uuid string, outputEventName s
 }
 
 func (p *OrdinaryProcessIpc) OrdinaryProcessStop(uuid string) *string {
-	ok, ordinaryProcess := findOrdinaryProcess(p, uuid)
+	ferr, ordinaryProcess := findOrdinaryProcess(p, uuid)
 
-	if !ok {
-		err := fmt.Sprintf("未找到uuid为 %s 的OrdinaryProcess实例", uuid)
-		return &err
+	if ferr != nil {
+		return ferr
 	}
 
 	if err := ordinaryProcess.Stop(); err != nil {
@@ -74,11 +87,10 @@ func (p *OrdinaryProcessIpc) OrdinaryProcessStop(uuid string) *string {
 }
 
 func (p *OrdinaryProcessIpc) SendCommandToOrdinaryProcess(uuid string, command string) *string {
-	ok, ordinaryProcess := findOrdinaryProcess(p, uuid)
+	ferr, ordinaryProcess := findOrdinaryProcess(p, uuid)
 
-	if !ok {
-		err := fmt.Sprintf("未找到uuid为 %s 的OrdinaryProcess实例", uuid)
-		return &err
+	if ferr != nil {
+		return ferr
 	}
 
 	if err := ordinaryProcess.SendCommand(command); err != nil {
@@ -91,11 +103,10 @@ func (p *OrdinaryProcessIpc) SendCommandToOrdinaryProcess(uuid string, command s
 }
 
 func (p *OrdinaryProcessIpc) GetOrdinaryProcessStatus(uuid string) (*entity.ProcessState, *string) {
-	ok, ordinaryProcess := findOrdinaryProcess(p, uuid)
+	ferr, ordinaryProcess := findOrdinaryProcess(p, uuid)
 
-	if !ok {
-		err := fmt.Sprintf("未找到uuid为 %s 的OrdinaryProcess实例", uuid)
-		return nil, &err
+	if ferr != nil {
+		return nil, ferr
 	}
 
 	status, err := ordinaryProcess.GetStatus()

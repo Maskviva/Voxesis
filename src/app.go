@@ -33,8 +33,11 @@ func InitAPP(assets embed.FS) *application.App {
 		Description: "Voxesis A Minecraft Server Manager",
 		Services: []application.Service{
 			application.NewService(&InterProcess.LoggerIpc{}),
+			application.NewService(&InterProcess.ConfigIpc{}),
+			application.NewService(&InterProcess.PluginIpc{}),
 			application.NewService(&InterProcess.OrdinaryProcessIpc{}),
 			application.NewService(&InterProcess.ConPtyProcessIpc{}),
+			application.NewService(&InterProcess.EnvJudgment{}),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),

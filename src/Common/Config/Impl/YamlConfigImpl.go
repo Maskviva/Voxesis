@@ -2,36 +2,37 @@ package v_config_impl
 
 import (
 	"context"
+	vconfig "voxesis/src/Common/Config"
 
 	"gopkg.in/yaml.v2"
 )
 
-// BaseYamlImpl YAML配置文件管理类，继承自BaseConfig
+// BaseYamlImpl YAML配置文件管理类，继承自BaseConfigImpl
 type BaseYamlImpl struct {
-	*BaseConfig // 嵌入基础配置类
+	*BaseConfigImpl // 嵌入基础配置类
 }
 
 // NewBaseYamlImpl 创建新的YAML配置实例
 // 确保文件内容是有效的YAML格式
 func NewBaseYamlImpl(filePath string) (*BaseYamlImpl, error) {
 	// 创建基础配置实例
-	baseConfig, err := NewBaseConfig(filePath)
+	BaseConfigImpl, err := NewBaseConfigImpl(filePath)
 	if err != nil {
 		return nil, err
 	}
 
 	// 验证或初始化YAML文件内容
-	if err := validateOrCreateYAML(baseConfig); err != nil {
+	if err := validateOrCreateYAML(BaseConfigImpl); err != nil {
 		return nil, err
 	}
 
 	return &BaseYamlImpl{
-		BaseConfig: baseConfig,
+		BaseConfigImpl: BaseConfigImpl,
 	}, nil
 }
 
 // validateOrCreateYAML 验证或创建有效的YAML文件
-func validateOrCreateYAML(config *BaseConfig) error {
+func validateOrCreateYAML(config *BaseConfigImpl) error {
 	data, err := config.Get()
 	if err != nil {
 		return err
@@ -116,3 +117,6 @@ func (y *BaseYamlImpl) WatchMap(ctx context.Context, callback func(map[string]in
 		}
 	})
 }
+
+// 验证接口实现
+var _ vconfig.BaseYaml = (*BaseYamlImpl)(nil)

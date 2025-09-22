@@ -2,6 +2,7 @@ package InterProcess
 
 import (
 	"fmt"
+	"os"
 	"path"
 	vcommon "voxesis/src/Common"
 	entity "voxesis/src/Common/Entity"
@@ -15,16 +16,30 @@ type ConPtyProcessIpc struct {
 	uuidMap map[string]*process.ConPtyProcess
 }
 
-func findPtyProcess(p *ConPtyProcessIpc, uuid string) (bool, *process.ConPtyProcess) {
-	logger, ok := p.uuidMap[uuid]
+func findPtyProcess(p *ConPtyProcessIpc, uuid string) (*string, *process.ConPtyProcess) {
+	ptyProcess, ok := p.uuidMap[uuid]
 	if !ok {
-		return false, nil
+		err := fmt.Sprintf("未找到uuid为 %s 的ConPtyProcess实例", uuid)
+		return &err, nil
 	}
 
-	return true, logger
+	return nil, ptyProcess
 }
 
-func (p *ConPtyProcessIpc) NewConPtyProcess(relPath string) *string {
+func (p *ConPtyProcessIpc) NewConPtyProcess(relPath string, abs bool) (*string, *string) {
+	if p.uuidMap == nil {
+		p.uuidMap = make(map[string]*process.ConPtyProcess)
+	}
+
+	if !abs {
+		relPath = path.Join(vcommon.AppDir, relPath)
+	}
+
+	if _, err := os.Stat(relPath); err != nil {
+		e := fmt.Sprintf("文件路径 %s 不存在", relPath)
+		return nil, &e
+	}
+
 	u := uuid.New()
 	uuidStr := u.String()
 
@@ -32,15 +47,14 @@ func (p *ConPtyProcessIpc) NewConPtyProcess(relPath string) *string {
 
 	p.uuidMap[uuidStr] = process.NewConPtyProcess(pPath)
 
-	return &uuidStr
+	return &uuidStr, nil
 }
 
 func (p *ConPtyProcessIpc) ConPtyProcessStart(uuid string, outputEventName string, args []string) *string {
-	ok, ConPtyProcess := findPtyProcess(p, uuid)
+	ferr, ConPtyProcess := findPtyProcess(p, uuid)
 
-	if !ok {
-		err := fmt.Sprintf("未找到uuid为 %s 的ConPtyProcess实例", uuid)
-		return &err
+	if ferr != nil {
+		return ferr
 	}
 
 	err := ConPtyProcess.Start(func(log string) {
@@ -57,11 +71,10 @@ func (p *ConPtyProcessIpc) ConPtyProcessStart(uuid string, outputEventName strin
 }
 
 func (p *ConPtyProcessIpc) ConPtyProcessStop(uuid string) *string {
-	ok, ConPtyProcess := findPtyProcess(p, uuid)
+	ferr, ConPtyProcess := findPtyProcess(p, uuid)
 
-	if !ok {
-		err := fmt.Sprintf("未找到uuid为 %s 的ConPtyProcess实例", uuid)
-		return &err
+	if ferr != nil {
+		return ferr
 	}
 
 	if err := ConPtyProcess.Stop(); err != nil {
@@ -74,11 +87,10 @@ func (p *ConPtyProcessIpc) ConPtyProcessStop(uuid string) *string {
 }
 
 func (p *ConPtyProcessIpc) SendCommandToConPtyProcess(uuid string, command string) *string {
-	ok, ConPtyProcess := findPtyProcess(p, uuid)
+	ferr, ConPtyProcess := findPtyProcess(p, uuid)
 
-	if !ok {
-		err := fmt.Sprintf("未找到uuid为 %s 的ConPtyProcess实例", uuid)
-		return &err
+	if ferr != nil {
+		return ferr
 	}
 
 	if err := ConPtyProcess.SendCommand(command); err != nil {
@@ -91,11 +103,10 @@ func (p *ConPtyProcessIpc) SendCommandToConPtyProcess(uuid string, command strin
 }
 
 func (p *ConPtyProcessIpc) GetConPtyProcessStatus(uuid string) (*entity.ProcessState, *string) {
-	ok, ConPtyProcess := findPtyProcess(p, uuid)
+	ferr, ConPtyProcess := findPtyProcess(p, uuid)
 
-	if !ok {
-		err := fmt.Sprintf("未找到uuid为 %s 的ConPtyProcess实例", uuid)
-		return nil, &err
+	if ferr != nil {
+		return nil, ferr
 	}
 
 	status, err := ConPtyProcess.GetStatus()

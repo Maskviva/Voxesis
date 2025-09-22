@@ -3,34 +3,35 @@ package v_config_impl
 import (
 	"context"
 	"encoding/json"
+	vconfig "voxesis/src/Common/Config"
 )
 
-// BaseJsonImpl JSON配置文件管理类，继承自BaseConfig
+// BaseJsonImpl JSON配置文件管理类，继承自BaseConfigImpl
 type BaseJsonImpl struct {
-	*BaseConfig // 嵌入基础配置类
+	*BaseConfigImpl // 嵌入基础配置类
 }
 
 // NewBaseJsonImpl 创建新的JSON配置实例
 // 确保文件内容是有效的JSON格式
 func NewBaseJsonImpl(filePath string) (*BaseJsonImpl, error) {
 	// 创建基础配置实例
-	baseConfig, err := NewBaseConfig(filePath)
+	BaseConfigImpl, err := NewBaseConfigImpl(filePath)
 	if err != nil {
 		return nil, err
 	}
 
 	// 验证或初始化JSON文件内容
-	if err := validateOrCreateJSON(baseConfig); err != nil {
+	if err := validateOrCreateJSON(BaseConfigImpl); err != nil {
 		return nil, err
 	}
 
 	return &BaseJsonImpl{
-		BaseConfig: baseConfig,
+		BaseConfigImpl: BaseConfigImpl,
 	}, nil
 }
 
 // validateOrCreateJSON 验证或创建有效的JSON文件
-func validateOrCreateJSON(config *BaseConfig) error {
+func validateOrCreateJSON(config *BaseConfigImpl) error {
 	data, err := config.Get()
 	if err != nil {
 		return err
@@ -115,3 +116,6 @@ func (j *BaseJsonImpl) WatchMap(ctx context.Context, callback func(map[string]in
 		}
 	})
 }
+
+// 验证接口实现
+var _ vconfig.BaseJson = (*BaseJsonImpl)(nil)

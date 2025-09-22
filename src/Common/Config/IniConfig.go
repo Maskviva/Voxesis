@@ -17,7 +17,7 @@ type BaseIni interface {
 	// SetSection 设置INI配置中的特定节
 	SetSection(sectionName string, sectionData map[string]string) error
 
-	// GetKey 获取INI配置中特定节的键值
+	// GetKey 获取INI配置xi中特定节的键值
 	GetKey(sectionName, keyName string) (string, error)
 
 	// SetKey 设置INI配置中特定节的键值

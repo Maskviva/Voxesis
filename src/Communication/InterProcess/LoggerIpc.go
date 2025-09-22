@@ -2,6 +2,8 @@ package InterProcess
 
 import (
 	"fmt"
+	"path"
+	vcommon "voxesis/src/Common"
 	vlogger "voxesis/src/Common/Logger"
 
 	"github.com/google/uuid"
@@ -11,17 +13,22 @@ type LoggerIpc struct {
 	uuidMap map[string]*vlogger.Logger
 }
 
-func findLogger(l *LoggerIpc, uuid string) (bool, *vlogger.Logger) {
+func findLogger(l *LoggerIpc, uuid string) (*string, *vlogger.Logger) {
 	logger, ok := l.uuidMap[uuid]
 	if !ok {
-		return false, nil
+		err := fmt.Sprintf("未找到uuid为 %s 的Logger实例", uuid)
+		return &err, nil
 	}
 
-	return true, logger
+	return nil, logger
 }
 
 func (l *LoggerIpc) NewLogger(logDir string, logFileName string, date bool) (*string, *string) {
-	logger, err := vlogger.NewLogger(logDir, logFileName, date)
+	if l.uuidMap == nil {
+		l.uuidMap = make(map[string]*vlogger.Logger)
+	}
+
+	logger, err := vlogger.NewLogger(path.Join(vcommon.AppDir, logDir), logFileName, date)
 	if err != nil {
 		vlogger.AppLogger.Errorf("NewLogger error: %v", err)
 		errStr := err.Error()
@@ -37,11 +44,10 @@ func (l *LoggerIpc) NewLogger(logDir string, logFileName string, date bool) (*st
 }
 
 func (l *LoggerIpc) CloseLogger(uuid string) *string {
-	ok, logger := findLogger(l, uuid)
+	ferr, logger := findLogger(l, uuid)
 
-	if !ok {
-		err := fmt.Sprintf("未找到uuid为 %s 的Logger实例", uuid)
-		return &err
+	if ferr != nil {
+		return ferr
 	}
 
 	err := logger.Close()
@@ -56,11 +62,10 @@ func (l *LoggerIpc) CloseLogger(uuid string) *string {
 }
 
 func (l *LoggerIpc) LogInfo(uuid string, logLine string) *string {
-	ok, logger := findLogger(l, uuid)
+	ferr, logger := findLogger(l, uuid)
 
-	if !ok {
-		err := fmt.Sprintf("未找到uuid为 %s 的Logger实例", uuid)
-		return &err
+	if ferr != nil {
+		return ferr
 	}
 
 	logger.Info(logLine)
@@ -69,11 +74,10 @@ func (l *LoggerIpc) LogInfo(uuid string, logLine string) *string {
 }
 
 func (l *LoggerIpc) LogDebug(uuid string, logLine string) *string {
-	ok, logger := findLogger(l, uuid)
+	ferr, logger := findLogger(l, uuid)
 
-	if !ok {
-		err := fmt.Sprintf("未找到uuid为 %s 的Logger实例", uuid)
-		return &err
+	if ferr != nil {
+		return ferr
 	}
 
 	logger.Debug(logLine)
@@ -82,11 +86,10 @@ func (l *LoggerIpc) LogDebug(uuid string, logLine string) *string {
 }
 
 func (l *LoggerIpc) LogWarn(uuid string, logLine string) *string {
-	ok, logger := findLogger(l, uuid)
+	ferr, logger := findLogger(l, uuid)
 
-	if !ok {
-		err := fmt.Sprintf("未找到uuid为 %s 的Logger实例", uuid)
-		return &err
+	if ferr != nil {
+		return ferr
 	}
 
 	logger.Warn(logLine)
@@ -95,11 +98,10 @@ func (l *LoggerIpc) LogWarn(uuid string, logLine string) *string {
 }
 
 func (l *LoggerIpc) LogError(uuid string, logLine string) *string {
-	ok, logger := findLogger(l, uuid)
+	ferr, logger := findLogger(l, uuid)
 
-	if !ok {
-		err := fmt.Sprintf("未找到uuid为 %s 的Logger实例", uuid)
-		return &err
+	if ferr != nil {
+		return ferr
 	}
 
 	logger.Error(logLine)

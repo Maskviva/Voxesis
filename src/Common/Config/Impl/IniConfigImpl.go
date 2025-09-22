@@ -2,35 +2,36 @@ package v_config_impl
 
 import (
 	"context"
+	vconfig "voxesis/src/Common/Config"
 
 	"gopkg.in/ini.v1"
 )
 
-// BaseIniImpl INI配置文件管理类，继承自BaseConfig
+// BaseIniImpl INI配置文件管理类，继承自BaseConfigImpl
 type BaseIniImpl struct {
-	*BaseConfig // 嵌入基础配置类
+	*BaseConfigImpl // 嵌入基础配置类
 }
 
 // NewBaseIniImpl 创建新的INI配置实例
 func NewBaseIniImpl(filePath string) (*BaseIniImpl, error) {
 	// 创建基础配置实例
-	baseConfig, err := NewBaseConfig(filePath)
+	BaseConfigImpl, err := NewBaseConfigImpl(filePath)
 	if err != nil {
 		return nil, err
 	}
 
 	// 验证或初始化INI文件内容
-	if err := validateOrCreateINI(baseConfig); err != nil {
+	if err := validateOrCreateINI(BaseConfigImpl); err != nil {
 		return nil, err
 	}
 
 	return &BaseIniImpl{
-		BaseConfig: baseConfig,
+		BaseConfigImpl: BaseConfigImpl,
 	}, nil
 }
 
 // validateOrCreateINI 验证或创建有效的INI文件
-func validateOrCreateINI(config *BaseConfig) error {
+func validateOrCreateINI(config *BaseConfigImpl) error {
 	data, err := config.Get()
 	if err != nil {
 		return err
@@ -171,3 +172,6 @@ func (i *BaseIniImpl) WatchSection(ctx context.Context, sectionName string, call
 		}
 	})
 }
+
+// 验证接口实现
+var _ vconfig.BaseIni = (*BaseIniImpl)(nil)

@@ -1,59 +1,35 @@
-# Welcome to Your New Wails3 Project!
+# Voxesis - 新一代可拓展 Minecraft 服务器管理面板
 
-Congratulations on generating your Wails3 application! This README will guide you through the next steps to get your project up and running.
+>当前版本为[上一代](https://gitee.com/Maskviva/voxesis_native)的重构版 当前距离首个正式版的进度大约在 35% 左右
 
-## Getting Started
+> 一款专为 Minecraft Server 设计的、高度模块化的现代桌面管理应用。
 
-1. Navigate to your project directory in the terminal.
+Voxesis 旨在提供一个优雅、强大且极具拓展性的服务器管理体验。它不仅是一个工具，更是一个开放的生态平台，允许您通过插件和主题打造完全个性化的管理面板。
 
-2. To run your application in development mode, use the following command:
+🌐 [插件模板](https://gitee.com/Maskviva/voxesis-plugin-example) | 📖 [开发者文档](developer.md) | 🐛 [问题反馈](https://gitee.com/Maskviva/voxesis/issues)
 
-   ```
-   wails3 dev
-   ```
+## ✨ 核心特性
 
-   This will start your application and enable hot-reloading for both frontend and backend changes.
+🔌 **简单的插件制作**：TypeScript + Vue3 与 对应API结合就可以插件一个插件。
+🧑‍💻 **为开发者而生**：提供完整的开发文档、CLI 工具和 Vue 3 插件模板，开发体验极佳。
 
-3. To build your application for production, use:
+## 📦 安装部署
 
-   ```
-   wails3 build
-   ```
+在开始前，请确保您的系统满足以下要求：
+- Windows 版本支持 [WebView2](https://developer.microsoft.com/zh-cn/microsoft-edge/webview2/?form=MA13LH) 组件。
+- 硬件资源满足运行 Minecraft 服务器的基本需求。
 
-   This will create a production-ready executable in the `build` directory.
+**安装步骤：**
+1. **下载安装包**：访问 Voxesis 的 [Gitee Releases 页面](https://gitee.com/Maskviva/voxesis/releases)，下载最新的 `Voxesis-amd64-installer.exe`。
+2. **启动安装程序**：双击下载的 `.exe` 文件，并根据向导提示操作。
+3. **选择安装位置**：选择您希望安装 Voxesis 的目录。
+4. **完成安装**：安装完成后，点击桌面的 Voxesis 快捷方式即可启动。
 
-## Exploring Wails3 Features
+## 🧑‍💻 插件开发
 
-Now that you have your project set up, it's time to explore the features that Wails3 offers:
+Voxesis 的核心魅力在于其强大的拓展性。我们为开发者提供了现代化的技术栈和友好的开发环境。
 
-1. **Check out the examples**: The best way to learn is by example. Visit the `examples` directory in the `v3/examples` directory to see various sample applications.
-
-2. **Run an example**: To run any of the examples, navigate to the example's directory and use:
-
-   ```
-   go run .
-   ```
-
-   Note: Some examples may be under development during the alpha phase.
-
-3. **Explore the documentation**: Visit the [Wails3 documentation](https://v3alpha.wails.io/) for in-depth guides and API references.
-
-4. **Join the community**: Have questions or want to share your progress? Join the [Wails Discord](https://discord.gg/JDdSxwjhGf) or visit the [Wails discussions on GitHub](https://github.com/wailsapp/wails/discussions).
-
-## Project Structure
-
-Take a moment to familiarize yourself with your project structure:
-
-- `frontend/`: Contains your frontend code (HTML, CSS, JavaScript/TypeScript)
-- `main.go`: The entry point of your Go backend
-- `app.go`: Define your application structure and methods here
-- `wails.json`: Configuration file for your Wails project
-
-## Next Steps
-
-1. Modify the frontend in the `frontend/` directory to create your desired UI.
-2. Add backend functionality in `main.go`.
-3. Use `wails3 dev` to see your changes in real-time.
-4. When ready, build your application with `wails3 build`.
-
-Happy coding with Wails3! If you encounter any issues or have questions, don't hesitate to consult the documentation or reach out to the Wails community.
+**技术栈要求：**
+- Vue 3 (Composition API)
+- TypeScript
+- Node.js 和 npm/yarn/pnpm

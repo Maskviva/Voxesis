@@ -15,7 +15,6 @@
 </template>
 
 <script setup lang="ts">
-import {GetCodeTemp, UpdateCodeTemp} from "../bindings/voxesis/src/ipc/code"
 import {Window} from "@wailsio/runtime"
 import * as monaco from 'monaco-editor';
 import {ref} from "vue";
@@ -36,9 +35,9 @@ const NavbarItems = [
       {
         label: "关闭",
         click: () => {
-          save_file().then(() => {
-            Window.Close()
-          })
+          // save_file().then(() => {
+          //   Window.Close()
+          // })
         }
       }
     ]
@@ -77,14 +76,14 @@ monaco.languages.setMonarchTokensProvider('properties', {
   }
 });
 
-GetCodeTemp(name!).then((codeTemp) => {
-  monaco_editor_init(codeTemp!.Content, codeTemp!.Type);
-  FileType = codeTemp!.Type
-})
+// GetCodeTemp(name!).then((codeTemp) => {
+//   monaco_editor_init(codeTemp!.Content, codeTemp!.Type);
+//   FileType = codeTemp!.Type
+// })
 
 function save_file() {
-  if (FileType == 'json') return UpdateCodeTemp(name!, EditorContainer.value.querySelector(".monaco-editor").querySelector(".view-lines").textContent.replace(/\r?\s+/g, ''))
-  return UpdateCodeTemp(name!, EditorContainer.value.querySelector(".monaco-editor").querySelector(".view-lines").textContent)
+  // if (FileType == 'json') return UpdateCodeTemp(name!, EditorContainer.value.querySelector(".monaco-editor").querySelector(".view-lines").textContent.replace(/\r?\s+/g, ''))
+  // return UpdateCodeTemp(name!, EditorContainer.value.querySelector(".monaco-editor").querySelector(".view-lines").textContent)
 }
 
 function monaco_editor_init(text: string, model: string) {

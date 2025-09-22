@@ -3,49 +3,101 @@ package InterProcess
 import (
 	"fmt"
 	"path"
-	v_common "voxesis/src/Common"
-	vconfig "voxesis/src/Common/Config"
-	vconfigimpl "voxesis/src/Common/Config/Impl"
-	v_logger "voxesis/src/Common/Logger"
+	vcommon "voxesis/src/Common"
+	vmanager "voxesis/src/Common/Manager"
+
+	"github.com/google/uuid"
 )
 
 type ConfigIpc struct {
+	uuidMap map[string]*vmanager.ConfigManager
 }
 
-type ConfigManager struct {
-	jsonConfig       vconfig.BaseJson
-	yamlConfig       vconfig.BaseYaml
-	iniConfig        vconfig.BaseIni
-	propertiesConfig vconfig.BaseProperties
-}
-
-func (c *ConfigIpc) NewConfigManager(mtype string, filePath string) (*string, *string) {
-	var (
-		conifgManager ConfigManager
-		err           error
-	)
-	cPath := path.Join(v_common.AppDir, filePath)
-
-	switch mtype {
-	case "json":
-		conifgManager.jsonConfig, err = vconfigimpl.NewBaseJsonImpl(cPath)
-		break
-	case "yaml":
-		conifgManager.yamlConfig, err = vconfigimpl.NewBaseYamlImpl(cPath)
-		break
-	case "ini":
-		conifgManager.iniConfig, err = vconfigimpl.NewBaseIniImpl(cPath)
-		break
-	case "properties":
-		conifgManager.propertiesConfig, err = vconfigimpl.NewBasePropertiesImpl(cPath)
-		break
+func findConfigManager(c *ConfigIpc, uuid string) (*string, *vmanager.ConfigManager) {
+	configManager, ok := c.uuidMap[uuid]
+	if !ok {
+		err := fmt.Sprintf("为找到 uuid为: %s 的 ConfigManager 对象", uuid)
+		return &err, nil
 	}
 
+	return nil, configManager
+}
+
+func (c *ConfigIpc) NewConfigManager(managerType vmanager.ConfigType, filePath string, abs bool) (*string, *string) {
+	if c.uuidMap == nil {
+		c.uuidMap = make(map[string]*vmanager.ConfigManager)
+	}
+
+	if !abs {
+		filePath = path.Join(vcommon.AppDir, filePath)
+	}
+
+	manager, err := vmanager.NewConfigManager(managerType, filePath)
 	if err != nil {
-		e := fmt.Sprintf("NewConfigManager error: %v", err)
-		v_logger.AppLogger.Error(e)
+		e := err.Error()
 		return nil, &e
 	}
 
-	return &conifgManager, nil
+	u := uuid.New()
+	uuidStr := u.String()
+	c.uuidMap[uuidStr] = manager
+
+	return &uuidStr, nil
+}
+
+func (c *ConfigIpc) GetValueOfKey(uuid string, key string, section string) (*string, *string) {
+	ferr, configManager := findConfigManager(c, uuid)
+
+	if ferr != nil {
+		return nil, ferr
+	}
+
+	value, err := configManager.GetValueOfKey(section, key)
+	if err != nil {
+		e := err.Error()
+		return nil, &e
+	}
+
+	return &value, nil
+}
+
+func (c *ConfigIpc) GetAllValue(uuid string) (interface{}, *string) {
+	ferr, configManager := findConfigManager(c, uuid)
+
+	if ferr != nil {
+		return nil, ferr
+	}
+
+	value, err := configManager.GetAllValue()
+	if err != nil {
+		return nil, nil
+	}
+
+	return value, nil
+}
+
+func (c *ConfigIpc) SetValueOfKey(uuid string, key string, value string, section string) *string {
+	ferr, configManager := findConfigManager(c, uuid)
+	var e string
+
+	if ferr != nil {
+		return ferr
+	}
+
+	e = configManager.SetValueOfKey(section, key, value).Error()
+
+	return &e
+}
+
+func (c *ConfigIpc) DelValueOfKey(uuid string, key string) *string {
+	ferr, configManager := findConfigManager(c, uuid)
+	var e string
+
+	if ferr != nil {
+		return ferr
+	}
+
+	e = configManager.DelValueOfKey(key).Error()
+
+	return &e
 }
