@@ -34,7 +34,7 @@ func (p *ConPtyProcessIpc) NewConPtyProcess(relPath string, abs bool) (*string, 
 	if !abs {
 		relPath = path.Join(vcommon.AppDir, relPath)
 	}
-
+	fmt.Println(relPath, abs)
 	if _, err := os.Stat(relPath); err != nil {
 		e := fmt.Sprintf("文件路径 %s 不存在", relPath)
 		return nil, &e
@@ -43,9 +43,7 @@ func (p *ConPtyProcessIpc) NewConPtyProcess(relPath string, abs bool) (*string, 
 	u := uuid.New()
 	uuidStr := u.String()
 
-	pPath := path.Join(vcommon.AppDir, relPath)
-
-	p.uuidMap[uuidStr] = process.NewConPtyProcess(pPath)
+	p.uuidMap[uuidStr] = process.NewConPtyProcess(relPath)
 
 	return &uuidStr, nil
 }

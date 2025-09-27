@@ -43,9 +43,7 @@ func (p *OrdinaryProcessIpc) NewOrdinaryProcess(relPath string, abs bool) (*stri
 	u := uuid.New()
 	uuidStr := u.String()
 
-	pPath := path.Join(vcommon.AppDir, relPath)
-
-	p.uuidMap[uuidStr] = process.NewOrdinaryProcess(pPath)
+	p.uuidMap[uuidStr] = process.NewOrdinaryProcess(relPath)
 
 	return &uuidStr, nil
 }

@@ -110,6 +110,8 @@ func (cm *ConfigManager) SetValueOfKey(section, key, value string) error {
 // DelValueOfKey 删除指定键的值
 func (cm *ConfigManager) DelValueOfKey(key string) error {
 	switch cm.configType {
+	case JSON:
+		return cm.jsonConfig.DeleteValue(key)
 	case PROPERTIES:
 		return cm.propConfig.DeleteProperty(key)
 	default:

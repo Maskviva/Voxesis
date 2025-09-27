@@ -52,13 +52,12 @@ func (c *ConfigIpc) GetValueOfKey(uuid string, key string, section string) (*str
 		return nil, ferr
 	}
 
-	value, err := configManager.GetValueOfKey(section, key)
-	if err != nil {
+	if value, err := configManager.GetValueOfKey(section, key); err == nil {
+		return &value, nil
+	} else {
 		e := err.Error()
 		return nil, &e
 	}
-
-	return &value, nil
 }
 
 func (c *ConfigIpc) GetAllValue(uuid string) (interface{}, *string) {
@@ -68,36 +67,40 @@ func (c *ConfigIpc) GetAllValue(uuid string) (interface{}, *string) {
 		return nil, ferr
 	}
 
-	value, err := configManager.GetAllValue()
-	if err != nil {
-		return nil, nil
+	if value, err := configManager.GetAllValue(); err == nil {
+		return value, nil
+	} else {
+		e := err.Error()
+		return nil, &e
 	}
-
-	return value, nil
 }
 
 func (c *ConfigIpc) SetValueOfKey(uuid string, key string, value string, section string) *string {
 	ferr, configManager := findConfigManager(c, uuid)
-	var e string
 
 	if ferr != nil {
 		return ferr
 	}
 
-	e = configManager.SetValueOfKey(section, key, value).Error()
-
-	return &e
+	if err := configManager.SetValueOfKey(section, key, value); err == nil {
+		return nil
+	} else {
+		e := err.Error()
+		return &e
+	}
 }
 
 func (c *ConfigIpc) DelValueOfKey(uuid string, key string) *string {
 	ferr, configManager := findConfigManager(c, uuid)
-	var e string
 
 	if ferr != nil {
 		return ferr
 	}
 
-	e = configManager.DelValueOfKey(key).Error()
-
-	return &e
+	if err := configManager.DelValueOfKey(key); err == nil {
+		return nil
+	} else {
+		e := err.Error()
+		return &e
+	}
 }

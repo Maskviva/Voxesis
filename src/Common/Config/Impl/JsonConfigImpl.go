@@ -97,6 +97,17 @@ func (j *BaseJsonImpl) SetValue(key string, value interface{}) error {
 	return j.SetMap(m)
 }
 
+// DeleteValue 删除JSON中的特定字段
+func (j *BaseJsonImpl) DeleteValue(key string) error {
+	m, err := j.GetMap()
+	if err != nil {
+		// 如果读取失败，创建一个新的map
+		m = make(map[string]interface{})
+	}
+	delete(m, key)
+	return j.SetMap(m)
+}
+
 // WatchStruct 监听配置文件变更并解析到结构体中
 func (j *BaseJsonImpl) WatchStruct(ctx context.Context, callback func(interface{}), structFactory func() interface{}) error {
 	return j.Watch(ctx, func(data []byte) {

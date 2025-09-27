@@ -19,6 +19,16 @@ import {
     SetValueOfKey
 } from "../../bindings/voxesis/src/Communication/InterProcess/configipc";
 import {ConfigType} from "../../bindings/voxesis/src/Common/Manager";
+import {ShallowRef, shallowRef} from 'vue'
+
+export interface ServerState {
+    pid: string;
+    cpu: { value: number; time: string }[];
+    memory: { value: number; time: string }[];
+    runTime: string;
+}
+
+export const ServersState: ShallowRef<Map<string, ServerState>> = shallowRef(new Map());
 
 export class mcServerConfigManager {
     private uuid: string = "";
@@ -31,20 +41,22 @@ export class mcServerConfigManager {
         return NewConfigManager(ConfigType.$JSON, "./config/mcServer.config.json", false).then(([uuid, err]) => {
             if (err) {
                 throw new Error("NewConfigManager error:" + err);
-            } else {
-                this.uuid = uuid!;
-                this.init()
             }
-        })
+            this.uuid = uuid!;
+            this.init();
+        });
     }
 
     NewServer(name: string, path: string, abs: boolean, conPty: boolean, args: string[]) {
         const id = String(this.mcServerManagerMap.size + 1)
         const outputEventName = "mcServerOutput<" + id
+        const newManager = new mcServerManager(conPty, path, abs, args, outputEventName)
 
-        this.mcServerManagerMap.set(id, new mcServerManager(conPty, path, abs, args, outputEventName))
+        this.mcServerManagerMap.set(id, newManager)
 
-        SetValueOfKey(this.uuid, id, JSON.stringify({name, path, conPty, outputEventName, args}), "")
+        SetValueOfKey(this.uuid, id, JSON.stringify({name, path, abs, conPty, outputEventName, args}), "")
+
+        return newManager.create()
     }
 
     async GetServer(name: string) {
@@ -53,12 +65,14 @@ export class mcServerConfigManager {
             throw new Error("GetAllValue error:" + err);
         }
 
-        for (const value in avl) {
-            const server = JSON.parse(avl[value])
-            if (server['name'] === name) {
-                return this.mcServerManagerMap.get(name)
+        for (const key in avl) {
+            const server = JSON.parse(avl[key])
+
+            if (server['name'] == name) {
+                return this.mcServerManagerMap.get(key)
             }
         }
+
         return null
     }
 
@@ -78,20 +92,25 @@ export class mcServerConfigManager {
         }
 
         for (const key in avl) {
-            const server = JSON.parse(avl[key])
+            const server = JSON.parse(avl[String(key)])
             if (server['name'] === name) {
-                this.mcServerManagerMap.delete(key)
-                DelValueOfKey(this.uuid, key)
+                this.mcServerManagerMap.delete(String(key))
+                DelValueOfKey(this.uuid, String(key)).then(err => err ? console.error(err) : null)
             }
         }
     }
 
     private init() {
         GetAllValue(this.uuid).then(([avl, err]) => {
+            if (err) {
+                throw new Error("GetAllValue error:" + err);
+            }
+
             for (const key in avl) {
                 const server = JSON.parse(avl[key])
-                this.mcServerManagerMap.set(key, new mcServerManager(server['conPty'], server['path'], true, server['args'], server['outputEventName']))
+                this.NewServer(server['name'], server['path'], server['abs'], server['conPty'], server['args'])
             }
+
         })
     }
 }
@@ -99,13 +118,23 @@ export class mcServerConfigManager {
 export class mcServerManager {
     private readonly args: string[];
     private readonly conPty: boolean;
+    private path: string;
+    private abs: boolean;
     private readonly outputEventName: string;
 
     private uuid: string = "";
 
     constructor(conPty: boolean, path: string, abs: boolean, args: string[], outputEventName: string) {
-        if (conPty) {
-            NewConPtyProcess(path, abs).then(([uuid, err]) => {
+        this.args = args;
+        this.conPty = conPty;
+        this.path = path
+        this.abs = abs
+        this.outputEventName = outputEventName;
+    }
+
+    create() {
+        if (this.conPty) {
+            NewConPtyProcess(this.path, this.abs).then(([uuid, err]) => {
                 if (err) {
                     throw new Error("NewConPtyProcess error:" + err);
                 }
@@ -113,7 +142,7 @@ export class mcServerManager {
                 this.uuid = uuid!;
             })
         } else {
-            NewOrdinaryProcess(path, abs).then(([uuid, err]) => {
+            NewOrdinaryProcess(this.path, this.abs).then(([uuid, err]) => {
                 if (err) {
                     throw new Error("NewOrdinaryProcess error:" + err);
                 }
@@ -121,9 +150,6 @@ export class mcServerManager {
                 this.uuid = uuid!;
             })
         }
-        this.args = args;
-        this.conPty = conPty;
-        this.outputEventName = outputEventName;
     }
 
     Start() {

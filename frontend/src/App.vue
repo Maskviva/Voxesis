@@ -50,6 +50,7 @@ import {vHover} from "./utils/hover";
 import {vRipple} from "./utils/waves";
 import {isWails} from "./stores/env";
 import {closeWin, WinMaxSize, winMinimize, winToggleMaximise} from "./utils/window";
+import ChildWindow from "./components/ChildWindow.vue";
 
 const VIEW_LIST: Ref<{
   name: string,
@@ -64,14 +65,14 @@ const VIEW_LIST: Ref<{
     introduce: "实例",
     line_icon: markRaw(BirdpaperIcon.IconDatabaseLine),
     fill_icon: markRaw(BirdpaperIcon.IconDatabaseFill),
-  },
+  }
 ]);
 
 const view_component = shallowRef({
   name: "",
   component: HomeView
 });
-const sidebar_before_top = ref("100vh");
+const sidebar_before_top = ref("-50vh");
 const view_list_box = ref();
 
 const toggleView = (view: typeof VIEW_LIST.value[number]['name']) => {
