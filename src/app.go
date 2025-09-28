@@ -37,7 +37,7 @@ func InitAPP(assets embed.FS) *application.App {
 			application.NewService(&InterProcess.PluginIpc{}),
 			application.NewService(&InterProcess.OrdinaryProcessIpc{}),
 			application.NewService(&InterProcess.ConPtyProcessIpc{}),
-			application.NewService(&InterProcess.EnvJudgment{}),
+			application.NewService(&InterProcess.UtilsIpc{}),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),

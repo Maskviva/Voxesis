@@ -1,4 +1,4 @@
-import {IsWails} from "../../bindings/voxesis/src/Communication/InterProcess/EnvJudgment";
+import {IsWails} from "../../bindings/voxesis/src/Communication/InterProcess/utilsipc";
 import {ref} from "vue";
 
 export const isWails = ref(true);
