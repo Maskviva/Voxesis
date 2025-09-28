@@ -2,14 +2,15 @@
   <ChildWindow :id="id" :title="title">
     <div class="dashboard">
       <div class="overview-panel">
-        <div>
-
-        </div>
         <StatusCard :status-list="statusList"/>
         <MonitorCard :series="monitorSeries"/>
+        <Terminal class="terminal-wrapper" :instance="data" :mManager="mManager"/>
       </div>
 
       <div class="sidebar">
+        <div>
+
+        </div>
         <SystemInfoCard :system-info="systemInfo"/>
         <PlayerListCard :players-data="PlayersData"/>
       </div>
@@ -26,6 +27,7 @@ import SystemInfoCard, {type SystemInfoItem} from "./instanceStateComponents/Sys
 import PlayerListCard, {type Player} from "./instanceStateComponents/PlayerListCard.vue";
 import {mcServerConfigManager, ServersState} from "../../instance/mcServerInstanceManager";
 import {type Instance} from "../../view/instance.vue";
+import Terminal from "./instanceStateComponents/Terminal.vue";
 
 const props = defineProps<{
   id: string;
@@ -107,6 +109,13 @@ const PlayersData = ref<Player[]>([
   gap: var(--spacing-lg);
 }
 
+.terminal-wrapper {
+  flex-grow: 1;
+  min-height: 40vh;
+  display: flex;
+  flex-direction: column;
+}
+
 .sidebar {
   flex: 1;
   min-width: 280px;
@@ -119,7 +128,6 @@ const PlayersData = ref<Player[]>([
   gap: var(--spacing-lg);
 }
 
-/* 滚动条美化 */
 .overview-panel::-webkit-scrollbar,
 .sidebar::-webkit-scrollbar {
   width: 6px;

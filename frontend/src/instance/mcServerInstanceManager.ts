@@ -49,7 +49,7 @@ export class mcServerConfigManager {
 
     NewServer(name: string, path: string, abs: boolean, conPty: boolean, args: string[]) {
         const id = String(this.mcServerManagerMap.size + 1)
-        const outputEventName = "mcServerOutput<" + id
+        const outputEventName = "mcServerOutput<" + name
         const newManager = new mcServerManager(conPty, path, abs, args, outputEventName)
 
         this.mcServerManagerMap.set(id, newManager)

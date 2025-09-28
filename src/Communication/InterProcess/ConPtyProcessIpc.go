@@ -4,16 +4,19 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"time"
 	vcommon "voxesis/src/Common"
 	entity "voxesis/src/Common/Entity"
 	vlogger "voxesis/src/Common/Logger"
+	vutils "voxesis/src/Common/Utils"
 	process "voxesis/src/System/Process"
 
 	"github.com/google/uuid"
 )
 
 type ConPtyProcessIpc struct {
-	uuidMap map[string]*process.ConPtyProcess
+	uuidMap   map[string]*process.ConPtyProcess
+	logBuffer *vutils.RateLimitBuffer
 }
 
 func findPtyProcess(p *ConPtyProcessIpc, uuid string) (*string, *process.ConPtyProcess) {
@@ -55,8 +58,14 @@ func (p *ConPtyProcessIpc) ConPtyProcessStart(uuid string, outputEventName strin
 		return ferr
 	}
 
+	if p.logBuffer == nil {
+		p.logBuffer = vutils.NewRateLimitBuffer(10*time.Millisecond, func(data interface{}) {
+			vcommon.App.EmitEvent(outputEventName, data)
+		})
+	}
+
 	err := ConPtyProcess.Start(func(log string) {
-		vcommon.App.EmitEvent(outputEventName, log)
+		p.logBuffer.Add(log)
 	}, args)
 
 	if err != nil {

@@ -4,16 +4,19 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"time"
 	vcommon "voxesis/src/Common"
 	entity "voxesis/src/Common/Entity"
 	vlogger "voxesis/src/Common/Logger"
+	vutils "voxesis/src/Common/Utils"
 	process "voxesis/src/System/Process"
 
 	"github.com/google/uuid"
 )
 
 type OrdinaryProcessIpc struct {
-	uuidMap map[string]*process.OrdinaryProcess
+	uuidMap   map[string]*process.OrdinaryProcess
+	logBuffer *vutils.RateLimitBuffer
 }
 
 func findOrdinaryProcess(p *OrdinaryProcessIpc, uuid string) (*string, *process.OrdinaryProcess) {
@@ -55,8 +58,14 @@ func (p *OrdinaryProcessIpc) OrdinaryProcessStart(uuid string, outputEventName s
 		return ferr
 	}
 
+	if p.logBuffer == nil {
+		p.logBuffer = vutils.NewRateLimitBuffer(10*time.Millisecond, func(data interface{}) {
+			vcommon.App.EmitEvent(outputEventName, data)
+		})
+	}
+
 	err := ordinaryProcess.Start(func(log string) {
-		vcommon.App.EmitEvent(outputEventName, log)
+		p.logBuffer.Add(log)
 	}, args)
 
 	if err != nil {
