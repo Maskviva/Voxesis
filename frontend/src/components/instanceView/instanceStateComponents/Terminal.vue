@@ -35,10 +35,8 @@
 <script setup lang="ts">
 import {nextTick, onMounted, ref} from 'vue';
 import {ElMessage} from "element-plus";
-import {Instance} from "../../../view/instance.vue";
-import {Events} from "@wailsio/runtime";
 import {AnsiUp} from "ansi_up/ansi_up";
-import {mcServerConfigManager} from "../../../instance/mcServerInstanceManager";
+import {InstanceState, useInstancesStore} from "../../../stores/mcServerInstanceStore";
 
 interface TerminalLine {
   type: 'output' | 'command' | 'error' | 'info';
@@ -46,20 +44,11 @@ interface TerminalLine {
 }
 
 const props = defineProps<{
-  instance: Instance;
-  mManager: mcServerConfigManager;
+  instance: InstanceState;
 }>();
 
+const instancesStore = useInstancesStore();
 const ansiConverter = new AnsiUp();
-
-Events.On('mcServerOutput<' + props.instance.name, (data) => {
-  terminalLines.value.push({
-    type: 'output',
-    content: ansiConverter.ansi_to_html(data.data),
-  });
-
-  scrollToBottom();
-})
 
 const terminalOutput = ref<HTMLElement | null>(null);
 const terminalInput = ref<HTMLInputElement | null>(null);
@@ -71,6 +60,16 @@ const mouseDownTime = ref(0);
 const unRunning = ref(1);
 
 const terminalLines = ref<TerminalLine[]>([]);
+
+instancesStore.setOnOutput(({id, data}) => {
+  if (id !== props.instance.id) return;
+
+  terminalLines.value.push({
+    type: 'output',
+    content: ansiConverter.ansi_to_html(data),
+  });
+  scrollToBottom();
+})
 
 onMounted(() => {
   focusInput();
@@ -102,9 +101,7 @@ const executeCommand = () => {
   commandHistory.value.push(command);
   historyIndex.value = commandHistory.value.length;
 
-  props.mManager.GetServer(props.instance.name).then((server) => {
-    server.SendCommand(command)
-  })
+  instancesStore.sendCommandToInstance(props.instance.id, command)
 
   commandInput.value = '';
 

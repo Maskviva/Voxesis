@@ -2,7 +2,6 @@ package main
 
 import (
 	"embed"
-	_ "embed"
 	"log"
 	"voxesis/src"
 	vtray "voxesis/src/System/Tray"

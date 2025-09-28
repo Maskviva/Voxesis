@@ -15,7 +15,15 @@ func MainTray(app *application.App, icon []byte) {
 	menu.Add("隐藏窗口").OnClick(func(ctx *application.Context) {
 		vwindow.MainWindow.Hide()
 	})
+	menu.Add("关闭窗口").OnClick(func(ctx *application.Context) {
+		vwindow.MainWindow.Destroy()
+		vwindow.MainWindow = nil
+	})
 	menu.Add("显示窗口").OnClick(func(ctx *application.Context) {
+		if vwindow.MainWindow == nil {
+			vwindow.LoadMainWindow(app)
+			vwindow.MainWindow.Run()
+		}
 		vwindow.MainWindow.Show()
 	})
 	menu.Add("刷新页面").OnClick(func(context *application.Context) {

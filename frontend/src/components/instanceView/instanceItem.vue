@@ -1,28 +1,28 @@
 <template>
-  <div class="instance-card" :key="instance.name" @click="showChildWindow">
+  <div class="instance-card" @click="showChildWindow">
     <div class="instance-header">
-      <h3>{{ instance.name }}</h3>
-      <span class="status" :class="instance.status">{{ getStatusText(instance.status) }}</span>
+      <h3>{{ instance.instanceInfo.name }}</h3>
+      <span class="status" :class="instance.processState.status">{{ getStatusText() }}</span>
     </div>
     <div class="instance-details">
-      <p><i class="icon-folder"></i> {{ instance.path }}</p>
+      <p><i class="icon-folder"></i> {{ instance.instanceInfo.path }}</p>
     </div>
     <div class="instance-tags">
-      <span v-if="instance.conPty">ConPty</span>
-      <span v-if="!instance.abs">相对路径</span>
+      <span v-if="instance.instanceInfo.conPty">ConPty</span>
+      <span v-if="!instance.instanceInfo.abs">相对路径</span>
     </div>
     <div class="instance-actions">
       <button
           class="action-button start"
-          :disabled="instance.status === 'running' || instance.status === 'starting'"
-          @click.stop="startInstance"
+          :disabled="instance.processState.status === 'running' || instance.processState.status === 'starting'"
+          @click.stop="instancesStore.startInstance(instance.id)"
       >
         启动
       </button>
       <button
           class="action-button stop"
-          :disabled="instance.status === 'stopped'"
-          @click.stop="stopInstance"
+          :disabled="instance.processState.status === 'stopped'"
+          @click.stop="instancesStore.stopInstance(instance.id)"
       >
         停止
       </button>
@@ -34,130 +34,53 @@
 </template>
 
 <script setup lang="ts">
-import {mcServerConfigManager, ServersState} from "../../instance/mcServerInstanceManager";
-import {onMounted, onUnmounted, triggerRef} from "vue";
-import {Instance} from "../../view/instance.vue";
+import {InstanceState, useInstancesStore} from "../../stores/mcServerInstanceStore";
+import {onMounted, onUnmounted} from "vue";
+import {Events} from "@wailsio/runtime";
 
 const props = defineProps<{
-  instance: Instance;
-  modelValue: Instance[];
-  mManager: mcServerConfigManager;
+  name: string;
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: Instance[]): void;
-  (e: 'onShowChild', instance: Instance): void;
+  (e: 'onShowChild', name: string): void;
   (e: 'opened'): void;
   (e: 'closed'): void;
 }>();
 
+const instancesStore = useInstancesStore()
+const instance = instancesStore.instances.find(instance => instance.instanceInfo.name === props.name)
+
 let onlineListener: NodeJS.Timeout | number | null = null;
-let serverOffline = false;
-
-const startInstance = async () => {
-  const server = await props.mManager.GetServer(props.instance.name);
-  if (server) {
-    server.Start();
-    props.instance.status = 'running';
-    serverOffline = true;
-    emit('opened');
-  }
-};
-
-const stopInstance = async () => {
-  const server = await props.mManager.GetServer(props.instance.name);
-  if (server) {
-    server.Stop();
-    props.instance.status = 'stopped';
-    serverOffline = false;
-    emit('closed');
-  }
-};
 
 const removeInstance = () => {
-  props.mManager.DelServer(props.instance.name);
-  emit('update:modelValue', props.modelValue.filter(i => i.name !== props.instance.name));
+  instancesStore.deleteInstance(instance.id)
 };
 
 const showChildWindow = () => {
-  emit('onShowChild', props.instance);
+  emit('onShowChild', instance.instanceInfo.name);
 };
 
-const getStatusText = (status: Instance['status']): string => {
-  const statusMap: Record<Instance['status'], string> = {
+const getStatusText = (): string => {
+  const statusMap: Record<InstanceState['processState']['status'], string> = {
     running: '运行中',
     stopped: '已停止',
     starting: '启动中',
+    stopping: '停止中'
   };
-  return statusMap[status] || "未知";
+  return statusMap[instance.processState.status] || "未知";
 };
 
-onMounted(async () => {
-  const server = await props.mManager.GetServer(props.instance.name);
-  if (!server) return;
-
-  onlineListener = setInterval(async () => {
-    if (!serverOffline) return;
-
-    try {
-      const [state, error] = await server.GetStatus();
-
-      if (error || !state) {
-        if (String(error).includes("服务器未在运行")) {
-          serverOffline = false;
-        }
-
-        if (ServersState.value.has(props.instance.name)) {
-          ServersState.value.delete(props.instance.name);
-          triggerRef(ServersState);
-        }
-        return;
-      }
-
-      let currentState = ServersState.value.get(props.instance.name);
-
-      if (currentState) {
-        currentState.cpu.push({value: state.cpu, time: state.runTime});
-        currentState.memory.push({value: state.memory, time: state.runTime});
-
-        if (currentState.cpu.length > 100) {
-          currentState.cpu.shift();
-        }
-        if (currentState.memory.length > 100) {
-          currentState.memory.shift();
-        }
-
-        currentState.runTime = state.runTime;
-      } else {
-        ServersState.value.set(props.instance.name, {
-          pid: state.pid,
-          cpu: [{value: state.cpu, time: state.runTime}],
-          memory: [{value: state.memory, time: state.runTime}],
-          runTime: state.runTime
-        });
-      }
-
-      triggerRef(ServersState);
-
-    } catch (e) {
-      console.error(`获取实例 [${props.instance.name}] 状态失败:`, e);
-      if (ServersState.value.has(props.instance.name)) {
-        ServersState.value.delete(props.instance.name);
-        triggerRef(ServersState);
-      }
-    }
+onMounted(() => {
+  onlineListener = setInterval(() => {
+    if (instance.processState.status != "running") return;
+    instancesStore.updateInstanceStatus(instance.id)
   }, 1000);
 });
 
 onUnmounted(() => {
   if (onlineListener) {
     clearInterval(onlineListener);
-  }
-
-  if (ServersState.value.has(props.instance.name)) {
-    const newMap = new Map(ServersState.value);
-    newMap.delete(props.instance.name);
-    ServersState.value = newMap;
   }
 });
 </script>
@@ -255,7 +178,7 @@ onUnmounted(() => {
 }
 
 .instance-actions {
-  margin-top: auto; /* 将按钮推到底部 */
+  margin-top: auto;
   display: flex;
   gap: 8px;
 }

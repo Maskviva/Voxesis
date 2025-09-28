@@ -1,10 +1,10 @@
 <template>
-  <ChildWindow :id="id" :title="title">
+  <ChildWindow :id="name" :title="name">
     <div class="dashboard">
       <div class="overview-panel">
         <StatusCard :status-list="statusList"/>
         <MonitorCard :series="monitorSeries"/>
-        <Terminal class="terminal-wrapper" :instance="data" :mManager="mManager"/>
+        <Terminal class="terminal-wrapper" :instance="instance"/>
       </div>
 
       <div class="sidebar">
@@ -25,31 +25,25 @@ import StatusCard, {type StatusItem} from "./instanceStateComponents/StatusCard.
 import MonitorCard, {type Series} from "./instanceStateComponents/MonitorCard.vue";
 import SystemInfoCard, {type SystemInfoItem} from "./instanceStateComponents/SystemInfoCard.vue";
 import PlayerListCard, {type Player} from "./instanceStateComponents/PlayerListCard.vue";
-import {mcServerConfigManager, ServersState} from "../../instance/mcServerInstanceManager";
-import {type Instance} from "../../view/instance.vue";
 import Terminal from "./instanceStateComponents/Terminal.vue";
+import {InstanceState, useInstancesStore} from "../../stores/mcServerInstanceStore";
 
 const props = defineProps<{
-  id: string;
-  title: string;
-  data: Instance;
-  mManager: mcServerConfigManager;
+  name: string;
 }>();
 
-const serverState = computed(() => {
-  const state = ServersState.value.get(props.id);
-  return state ? {...state} : null;
-});
+const instancesStore = useInstancesStore()
+const instance = instancesStore.instances.find(s => s.instanceInfo.name === props.name) as InstanceState;
 
 const systemInfo = computed<SystemInfoItem[]>(() => [
-  {label: '实例名称', value: props.data.name},
-  {label: '进程 PID', value: serverState.value ? serverState.value.pid : 'N/A'},
-  {label: '运行时间', value: serverState.value ? serverState.value.runTime : '未运行'},
+  {label: '实例名称', value: instance.instanceInfo.name},
+  {label: '进程 PID', value: instance.processState.pid || 'N/A'},
+  {label: '运行时间', value: instance.processState.runTime},
 ]);
 
 const statusList = computed<StatusItem[]>(() => {
-  const latestCpu = serverState.value?.cpu.slice(-1)[0].value ?? 0;
-  const latestMemory = serverState.value?.memory.slice(-1)[0].value ?? 0;
+  const latestCpu = instance.processState.cpu.slice(-1)[0]?.value ?? 0;
+  const latestMemory = instance.processState.memory.slice(-1)[0]?.value ?? 0;
 
   return [
     {percentage: latestCpu, label: 'CPU', detail: `${latestCpu.toFixed(2)} %`, color: '#3b82f6'},
@@ -58,15 +52,8 @@ const statusList = computed<StatusItem[]>(() => {
 });
 
 const monitorSeries = computed<Series[]>(() => {
-  if (!serverState.value) {
-    return [
-      {label: 'CPU', status: '0.00 %', color: '#3b82f6', data: []},
-      {label: '内存', status: '0.00 MB', color: '#84cc16', data: []}
-    ];
-  }
-
-  const cpuData = serverState.value.cpu.map((value, _) => ({time: value.time, value: value.value}));
-  const memData = serverState.value.memory.map((value, _) => ({time: value.time, value: value.value}));
+  const cpuData = instance.processState.cpu.map((value, _) => ({time: value.time, value: value.value}));
+  const memData = instance.processState.memory.map((value, _) => ({time: value.time, value: value.value}));
 
   return [
     {

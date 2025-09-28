@@ -96,11 +96,11 @@
 
 <script setup lang="ts">
 import {UnwrapRef} from "vue";
-import {type Instance} from "../../view/instance.vue";
+import {InstanceCreationInfo} from "../../stores/mcServerInstanceStore";
 
 const props = defineProps<{
   createInstance: () => void
-  newInstance: UnwrapRef<Instance>
+  newInstance: UnwrapRef<InstanceCreationInfo>
   closeModal: () => void
 }>()
 

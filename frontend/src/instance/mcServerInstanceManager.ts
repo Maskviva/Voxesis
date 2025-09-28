@@ -1,3 +1,12 @@
+// mcServerInstanceManager.ts
+import {ShallowRef, shallowRef} from 'vue'
+import {
+    DelValueOfKey,
+    GetAllValue,
+    NewConfigManager,
+    SetValueOfKey
+} from "../../bindings/voxesis/src/Communication/InterProcess/configipc";
+import {ConfigType} from "../../bindings/voxesis/src/Common/Manager";
 import {
     ConPtyProcessStart,
     ConPtyProcessStop,
@@ -12,15 +21,8 @@ import {
     OrdinaryProcessStop,
     SendCommandToOrdinaryProcess
 } from "../../bindings/voxesis/src/Communication/InterProcess/ordinaryprocessipc";
-import {
-    DelValueOfKey,
-    GetAllValue,
-    NewConfigManager,
-    SetValueOfKey
-} from "../../bindings/voxesis/src/Communication/InterProcess/configipc";
-import {ConfigType} from "../../bindings/voxesis/src/Common/Manager";
-import {ShallowRef, shallowRef} from 'vue'
 
+// Interface definitions remain the same
 export interface ServerState {
     pid: string;
     cpu: { value: number; time: string }[];
@@ -28,159 +30,251 @@ export interface ServerState {
     runTime: string;
 }
 
+export interface ServerConfig {
+    name: string;
+    path: string;
+    abs: boolean;
+    conPty: boolean;
+    args: string[];
+    outputEventName: string;
+}
+
 export const ServersState: ShallowRef<Map<string, ServerState>> = shallowRef(new Map());
 
-export class mcServerConfigManager {
-    private uuid: string = "";
-    private mcServerManagerMap: Map<string, mcServerManager> = new Map<string, mcServerManager>()
+const handleError = (operation: string, error: any) => {
+    console.error(`${operation} error:`, error);
+};
 
-    constructor() {
-    }
+export class McServerConfigManager {
+    private configUuid: string = "";
+    private serverManagers = new Map<string, McServerManager>();
 
-    create() {
-        return NewConfigManager(ConfigType.$JSON, "./config/mcServer.config.json", false).then(([uuid, err]) => {
-            if (err) {
-                throw new Error("NewConfigManager error:" + err);
+    async initialize() {
+        try {
+            const [uuid, error] = await NewConfigManager(
+                ConfigType.$JSON,
+                "./config/mcServer.config.json",
+                false
+            );
+
+            if (error || !uuid) {
+                handleError("ConfigManager initialization", error || "UUID not returned");
+                return; // Guard against further execution
             }
-            this.uuid = uuid!;
-            this.init();
-        });
-    }
 
-    NewServer(name: string, path: string, abs: boolean, conPty: boolean, args: string[]) {
-        const id = String(this.mcServerManagerMap.size + 1)
-        const outputEventName = "mcServerOutput<" + name
-        const newManager = new mcServerManager(conPty, path, abs, args, outputEventName)
-
-        this.mcServerManagerMap.set(id, newManager)
-
-        SetValueOfKey(this.uuid, id, JSON.stringify({name, path, abs, conPty, outputEventName, args}), "")
-
-        return newManager.create()
-    }
-
-    async GetServer(name: string) {
-        const [avl, err] = await GetAllValue(this.uuid)
-        if (err) {
-            throw new Error("GetAllValue error:" + err);
-        }
-
-        for (const key in avl) {
-            const server = JSON.parse(avl[key])
-
-            if (server['name'] == name) {
-                return this.mcServerManagerMap.get(key)
-            }
-        }
-
-        return null
-    }
-
-    async GetAllServerData() {
-        const [avl, err] = await GetAllValue(this.uuid)
-        if (err) {
-            throw new Error("GetAllValue error:" + err);
-        }
-
-        return avl;
-    }
-
-    async DelServer(name: string) {
-        const [avl, err] = await GetAllValue(this.uuid)
-        if (err) {
-            throw new Error("GetAllValue error:" + err);
-        }
-
-        for (const key in avl) {
-            const server = JSON.parse(avl[String(key)])
-            if (server['name'] === name) {
-                this.mcServerManagerMap.delete(String(key))
-                DelValueOfKey(this.uuid, String(key)).then(err => err ? console.error(err) : null)
-            }
+            this.configUuid = uuid!;
+            await this.loadServers();
+        } catch (error) {
+            handleError("McServerConfigManager initialization", error);
         }
     }
 
-    private init() {
-        GetAllValue(this.uuid).then(([avl, err]) => {
-            if (err) {
-                throw new Error("GetAllValue error:" + err);
+    /**
+     * Creates a server, saves it, and returns its new ID, manager, and config.
+     * This is more efficient for the store than re-fetching.
+     */
+    async createServer(config: Omit<ServerConfig, "outputEventName">): Promise<{
+        id: string,
+        manager: McServerManager,
+        config: ServerConfig
+    } | null> {
+        try {
+            const id = String(this.serverManagers.size + 1); // Use a robust unique ID
+            const outputEventName = `mc-server-output-${id}`; // Ensure event name is unique
+            const fullConfig: ServerConfig = {...config, outputEventName};
+
+            const manager = new McServerManager(
+                fullConfig.conPty,
+                fullConfig.path,
+                fullConfig.abs,
+                fullConfig.args,
+                fullConfig.outputEventName
+            );
+
+            const uuid = await manager.initialize();
+            this.serverManagers.set(id, manager);
+
+            const setError = await SetValueOfKey(
+                this.configUuid,
+                id,
+                JSON.stringify(fullConfig),
+                ""
+            );
+
+            if (setError) {
+                handleError("SetValueOfKey in createServer", setError);
+                this.serverManagers.delete(id); // Rollback
+                return null;
             }
 
-            for (const key in avl) {
-                const server = JSON.parse(avl[key])
-                this.NewServer(server['name'], server['path'], server['abs'], server['conPty'], server['args'])
+            return {id, manager, config: fullConfig};
+        } catch (error) {
+            handleError("createServer", error);
+            return null;
+        }
+    }
+
+    getServer(id: string): McServerManager | undefined {
+        return this.serverManagers.get(id);
+    }
+
+    async getAllServers(): Promise<Record<string, ServerConfig>> {
+        try {
+            const [values, error] = await GetAllValue(this.configUuid);
+            if (error) {
+                handleError("getAllServers", error);
+                return {};
             }
 
-        })
+            return Object.entries(values || {}).reduce((acc, [key, value]) => {
+                try {
+                    acc[key] = JSON.parse(value as string);
+                } catch (parseError) {
+                    console.error(`Error parsing config for key ${key}:`, parseError);
+                }
+                return acc;
+            }, {} as Record<string, ServerConfig>);
+        } catch (error) {
+            handleError("getAllServers", error);
+            return {};
+        }
+    }
+
+    async deleteServer(id: string): Promise<void> {
+        try {
+            const manager = this.serverManagers.get(id);
+            if (!manager) return;
+
+            const status = await manager.getStatus();
+            console.log('awdawd')
+            if (status) {
+                await manager.stop();
+            }
+
+            this.serverManagers.delete(id);
+
+            const delError = await DelValueOfKey(this.configUuid, id);
+            if (delError) handleError("deleteServer", delError);
+        } catch (error) {
+            handleError("deleteServer", error);
+        }
+    }
+
+    private async loadServers() {
+        try {
+            const servers = await this.getAllServers();
+
+            for (const [id, config] of Object.entries(servers)) {
+                const manager = new McServerManager(
+                    config.conPty,
+                    config.path,
+                    config.abs,
+                    config.args,
+                    config.outputEventName
+                );
+
+                await manager.initialize();
+                this.serverManagers.set(id, manager);
+            }
+        } catch (error) {
+            handleError("loadServers", error);
+        }
     }
 }
 
-export class mcServerManager {
+
+// McServerManager class remains unchanged as its role is already well-defined.
+export class McServerManager {
+    private processUuid: string = "";
+    private readonly isConPty: boolean;
+    private readonly path: string;
+    private readonly isAbsolutePath: boolean;
     private readonly args: string[];
-    private readonly conPty: boolean;
-    private path: string;
-    private abs: boolean;
     private readonly outputEventName: string;
 
-    private uuid: string = "";
-
-    constructor(conPty: boolean, path: string, abs: boolean, args: string[], outputEventName: string) {
+    constructor(
+        isConPty: boolean,
+        path: string,
+        isAbsolutePath: boolean,
+        args: string[],
+        outputEventName: string
+    ) {
+        this.isConPty = isConPty;
+        this.path = path;
+        this.isAbsolutePath = isAbsolutePath;
         this.args = args;
-        this.conPty = conPty;
-        this.path = path
-        this.abs = abs
         this.outputEventName = outputEventName;
     }
 
-    create() {
-        if (this.conPty) {
-            NewConPtyProcess(this.path, this.abs).then(([uuid, err]) => {
-                if (err) {
-                    throw new Error("NewConPtyProcess error:" + err);
-                }
+    async initialize(): Promise<string> {
+        try {
+            const [uuid, error] = this.isConPty
+                ? await NewConPtyProcess(this.path, this.isAbsolutePath)
+                : await NewOrdinaryProcess(this.path, this.isAbsolutePath);
 
-                this.uuid = uuid!;
-            })
-        } else {
-            NewOrdinaryProcess(this.path, this.abs).then(([uuid, err]) => {
-                if (err) {
-                    throw new Error("NewOrdinaryProcess error:" + err);
-                }
+            if (error || !uuid) {
+                handleError("Process initialization", error || "UUID not returned");
+            }
 
-                this.uuid = uuid!;
-            })
+            this.processUuid = uuid!;
+
+            return uuid;
+        } catch (error) {
+            handleError("McServerManager initialization", error);
+            return Promise.reject(error);
         }
     }
 
-    Start() {
-        if (this.conPty) {
-            ConPtyProcessStart(this.uuid, this.outputEventName, this.args)
-        } else {
-            OrdinaryProcessStart(this.uuid, this.outputEventName, this.args)
+    async start(): Promise<void> {
+        try {
+            const error = this.isConPty
+                ? await ConPtyProcessStart(this.processUuid, this.outputEventName, this.args)
+                : await OrdinaryProcessStart(this.processUuid, this.outputEventName, this.args);
+
+            if (error) handleError("start", error);
+        } catch (error) {
+            handleError("start", error);
         }
     }
 
-    Stop() {
-        if (this.conPty) {
-            ConPtyProcessStop(this.uuid)
-        } else {
-            OrdinaryProcessStop(this.uuid)
+    async stop(): Promise<void> {
+        try {
+            const error = this.isConPty
+                ? await ConPtyProcessStop(this.processUuid)
+                : await OrdinaryProcessStop(this.processUuid);
+
+            if (error) handleError("stop", error);
+        } catch (error) {
+            handleError("stop", error);
         }
     }
 
-    GetStatus() {
-        if (this.conPty) {
-            return GetConPtyProcessStatus(this.uuid)
-        } else {
-            return GetOrdinaryProcessStatus(this.uuid)
+    async getStatus(): Promise<any> {
+        try {
+            const [status, error] = this.isConPty
+                ? await GetConPtyProcessStatus(this.processUuid)
+                : await GetOrdinaryProcessStatus(this.processUuid);
+
+            if (error) {
+                handleError("getStatus", error);
+                return null;
+            }
+            return status;
+        } catch (error) {
+            handleError("getStatus", error);
+            return null;
         }
     }
 
-    SendCommand(command: string) {
-        if (this.conPty) {
-            SendCommandToConPtyProcess(this.uuid, command)
-        } else {
-            SendCommandToOrdinaryProcess(this.uuid, command)
+    async sendCommand(command: string): Promise<void> {
+        try {
+            const error = this.isConPty
+                ? await SendCommandToConPtyProcess(this.processUuid, command)
+                : await SendCommandToOrdinaryProcess(this.processUuid, command);
+
+            if (error) handleError("sendCommand", error);
+        } catch (error) {
+            handleError("sendCommand", error);
         }
     }
 }

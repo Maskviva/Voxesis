@@ -57,7 +57,7 @@ func (p *ConPtyProcessIpc) ConPtyProcessStart(uuid string, outputEventName strin
 	if ferr != nil {
 		return ferr
 	}
-
+	fmt.Println(outputEventName)
 	if p.logBuffer == nil {
 		p.logBuffer = vutils.NewRateLimitBuffer(10*time.Millisecond, func(data interface{}) {
 			vcommon.App.EmitEvent(outputEventName, data)
