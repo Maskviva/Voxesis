@@ -8,7 +8,7 @@
           class="status-circle-progress"
           :style="{ '--percent': `${animatedPercentage}%` }"
       ></div>
-      <div class="status-percentage">{{ animatedPercentage.toFixed(1) }}%</div>
+      <div class="status-percentage">{{ animatedPercentage.toFixed(2) }}%</div>
     </div>
     <div class="status-label">{{ label }}</div>
     <div class="status-detail">{{ detail }}</div>

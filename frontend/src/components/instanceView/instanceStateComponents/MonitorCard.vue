@@ -21,7 +21,6 @@ import {GridComponent, LegendComponent, TooltipComponent,} from 'echarts/compone
 import {LineChart} from 'echarts/charts';
 import {CanvasRenderer} from 'echarts/renderers';
 import {UniversalTransition} from 'echarts/features';
-import {ServersState} from "../../../instance/mcServerInstanceManager";
 
 echarts.use([
   TooltipComponent,
@@ -92,7 +91,7 @@ function setChartOption() {
       type: 'line',
       smooth: false,         // 平滑曲线
       showSymbol: false,    // 不显示数据点标记，更简洁
-      data: s.data.map(d => d.value),
+      data: s.data.map(d => d.value.toFixed(4)),
       itemStyle: {
         color: s.color,
       },

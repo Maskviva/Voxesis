@@ -275,7 +275,6 @@ onUnmounted(() => {
 
   position: absolute;
   background-color: var(--color-background);
-  z-index: 999999;
   border-radius: 8px;
   box-shadow: var(--shadow-lg);
   overflow: hidden;

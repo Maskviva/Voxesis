@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, type Component, type PropType} from 'vue'
+import {type Component, type PropType, ref, watch} from 'vue'
 
 const props = defineProps(
   {
@@ -33,6 +33,10 @@ const props = defineProps(
     Color: {
       type: String,
       default: '#595959'
+    },
+    Time: {
+      type: Number,
+      default: 0.3
     }
   }
 )
@@ -40,6 +44,7 @@ const props = defineProps(
 const LineIconRef = ref()
 const FillIconRef = ref()
 
+const time = ref(props.Time + "s")
 const iconName = ref<'LineIcon' | 'FillIcon'>('LineIcon')
 
 watch(props, () => {
@@ -54,6 +59,6 @@ watch(props, () => {
 <style scoped>
 .Icon {
   position: absolute;
-  transition: all 0.3s ease-in-out;
+  transition: all v-bind(time) ease-in-out;
 }
 </style>

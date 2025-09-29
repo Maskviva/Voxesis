@@ -1,5 +1,5 @@
 <template>
-  <ChildWindow :id="name" :title="name">
+  <ChildWindow class="main-window" :id="name" :title="'实例-' + name">
     <div class="dashboard">
       <div class="overview-panel">
         <StatusCard :status-list="statusList"/>
@@ -8,31 +8,51 @@
       </div>
 
       <div class="sidebar">
-        <div>
-
+        <div class="button-box">
+          <button
+              class="action-button start"
+              :disabled="instance.processState.status === 'running' || instance.processState.status === 'starting'"
+              @click.stop="instancesStore.startInstance(instance.id)"
+          >
+            启动
+          </button>
+          <button
+              class="action-button stop"
+              :disabled="instance.processState.status === 'stopped'"
+              @click.stop="instancesStore.stopInstance(instance.id)"
+          >
+            停止
+          </button>
+          <button class="action-button del"
+                  @click.stop="instancesStore.deleteInstance(instance.id)">
+            删除实例
+          </button>
         </div>
         <SystemInfoCard :system-info="systemInfo"/>
-        <PlayerListCard :players-data="PlayersData"/>
+        <PlayerListCard :id="instance.id"/>
       </div>
     </div>
   </ChildWindow>
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from "vue";
+import {computed} from "vue";
 import ChildWindow from "../ChildWindow.vue";
 import StatusCard, {type StatusItem} from "./instanceStateComponents/StatusCard.vue";
 import MonitorCard, {type Series} from "./instanceStateComponents/MonitorCard.vue";
 import SystemInfoCard, {type SystemInfoItem} from "./instanceStateComponents/SystemInfoCard.vue";
-import PlayerListCard, {type Player} from "./instanceStateComponents/PlayerListCard.vue";
+import PlayerListCard from "./instanceStateComponents/PlayerListCard.vue";
 import Terminal from "./instanceStateComponents/Terminal.vue";
 import {InstanceState, useInstancesStore} from "../../stores/mcServerInstanceStore";
+import {usePlayerListStore} from "../../stores/playerListStore";
+import {useSystemStateStore} from "../../stores/systemStateStore";
 
 const props = defineProps<{
   name: string;
 }>();
 
 const instancesStore = useInstancesStore()
+const systemStateStore = useSystemStateStore()
 const instance = instancesStore.instances.find(s => s.instanceInfo.name === props.name) as InstanceState;
 
 const systemInfo = computed<SystemInfoItem[]>(() => [
@@ -47,7 +67,14 @@ const statusList = computed<StatusItem[]>(() => {
 
   return [
     {percentage: latestCpu, label: 'CPU', detail: `${latestCpu.toFixed(2)} %`, color: '#3b82f6'},
-    {percentage: latestMemory / 4096 * 100, label: '内存', detail: `${latestMemory.toFixed(2)} MB`, color: '#84cc16'},
+    {
+      percentage: latestMemory / systemStateStore.systemStates[0].OsMemory,
+      label: '内存',
+      detail:
+          `${latestMemory.toFixed(2)} MB`,
+      color:
+          '#84cc16'
+    },
   ];
 });
 
@@ -71,17 +98,25 @@ const monitorSeries = computed<Series[]>(() => {
   ];
 });
 
-const PlayersData = ref<Player[]>([
-  {label: '网站', value: 0},
-  {label: '数据库-所有', value: 0},
-  {label: '计划任务', value: 0},
-  {label: '已安装应用', value: 0},
-]);
+const playerListStore = usePlayerListStore()
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'a') {
+    console.log("准备添加玩家...");
+    playerListStore.parseLogMessage(instance.id, "[2025-09-29 10:00:00 INFO] Player Spawned: Steve xuid: 123456789");
+  }
+})
 </script>
 
 <style scoped>
+.main-window {
+  container-type: inline-size;
+  container-name: sidebar-container;
+}
+
 .dashboard {
   display: flex;
+  width: 100%;
   height: 100%;
   overflow: hidden;
   background-color: var(--color-background);
@@ -126,7 +161,81 @@ const PlayersData = ref<Player[]>([
   border-radius: 3px;
 }
 
+.button-box {
+  width: 100%;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.action-button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex: 1;
+}
+
+.action-button.start {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.action-button.start:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.action-button.stop {
+  background-color: var(--color-error);
+  color: white;
+}
+
+.action-button.stop:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.action-button.del {
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.action-button.del:hover {
+  background-color: var(--color-error);
+  color: white;
+  border-color: var(--color-error);
+}
+
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
 @media (max-width: 992px) {
+  .dashboard {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .overview-panel, .sidebar {
+    overflow-y: visible;
+  }
+
+  .sidebar {
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+@container (max-width: 992px) {
   .dashboard {
     flex-direction: column;
     height: auto;

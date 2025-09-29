@@ -1,151 +1,192 @@
 <template>
   <header v-if="isWails" class="header" @dblclick="winToggleMaximise()">
-    <a v-top-text v-hover v-ripple class="header-btn" style="padding: 8px;">
-   <span style="display: flex; gap: 5px">
-   <img style="margin: 0" src="./assets/images/logo_no_background.png" width="25" height="25"
-        alt="logo">Voxesis</span>
+    <a v-top-text v-hover v-ripple class="header-btn" style="padding: 8px;"
+       @click="view_component = null; sidebar_before_top = '-50vh'">
+      <span style="display: flex; gap: 5px">
+        <img style="margin: 0" src="./assets/images/logo_no_background.png" width="25" height="25"
+             alt="logo">Voxesis
+      </span>
     </a>
 
     <div class="header-control">
       <a v-top-text v-hover class="header-btn" @click="winMinimize()">
-        <BirdpaperIcon.IconSubtractLine/>
+        <IconSubtractLine/>
       </a>
       <a v-top-text v-hover class="header-btn" @click="winToggleMaximise()">
         <component
-            :is="!WinMaxSize ? BirdpaperIcon.IconCheckboxBlankLine : BirdpaperIcon.IconCheckboxMultipleBlankLine"/>
+            :is="!WinMaxSize ? IconCheckboxBlankLine : IconCheckboxMultipleBlankLine"/>
       </a>
       <a v-top-text v-hover class="header-btn" @click="closeWin()">
-        <BirdpaperIcon.IconCloseLargeLine/>
+        <IconCloseLargeLine/>
       </a>
     </div>
   </header>
 
-  <ul ref="view_list_box" class="sidebar">
-    <Suspense>
-      <li v-for="item in VIEW_LIST" @click="toggleView(item.name)">
-        <IconToggle :LineIcon="item.line_icon" :FillIcon="item.fill_icon" :Size="25"
-                    :Toggle="view_component.name == item.name"></IconToggle>
-        <span class="sidebar-text">{{ item.introduce }}</span>
-      </li>
-    </Suspense>
+  <ul ref="viewListBox" class="sidebar">
+    <li v-for="item in VIEW_LIST" :key="item.name" class="item" @click="toggleView(item.name)">
+      <IconToggle :LineIcon="item.line_icon" :FillIcon="item.fill_icon" :Size="25"
+                  :Toggle="view_component?.name == item.name"></IconToggle>
+      <span class="sidebar-text">{{ item.introduce }}</span>
+    </li>
+
+    <li ref="systemStateRef" class="system-state" :class="{ 'is-open': detailVisible }"
+        @click="detailVisible = !detailVisible">
+      <div class="summary">
+        <span><IconCpuLine :size="14"/> {{ systemState ? systemState.CpuUsage.toFixed(0) : "-" }}%</span>
+        <span><IconRamLine :size="14"/> {{ systemState ? systemState.MemoryUsage.toFixed(0) : "-" }}%</span>
+      </div>
+      <div class="detail">
+        <div class="detail-item">
+          <span style="font-size: 0.8rem">CPU</span>
+          <ProgressBar height="10px" :progress="systemState?.CpuUsage || 0"/>
+          <span>{{ systemState?.CpuUsage !== undefined ? systemState.CpuUsage.toFixed(1) + "%" : "N/A" }}</span>
+        </div>
+        <div class="detail-item">
+          <span style="font-size: 0.8rem">Memory</span>
+          <ProgressBar height="10px" :progress="systemState?.MemoryUsage || 0"/>
+          <span>{{ systemState?.MemoryUsage !== undefined ? systemState.MemoryUsage.toFixed(1) + "%" : "N/A" }}</span>
+        </div>
+      </div>
+    </li>
   </ul>
 
   <div class="view-box">
-    <transition name="fade">
-      <keep-alive include="dashboard, proxy">
-        <component :is="view_component.component"/>
+    <transition name="fade" mode="out-in">
+      <HomeView v-if="!view_component"></HomeView>
+      <keep-alive include="instance" v-else>
+        <component :is="view_component!.component"/>
       </keep-alive>
     </transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import {markRaw, onMounted, provide, Ref, ref, shallowRef, watch} from 'vue';
-import * as BirdpaperIcon from 'birdpaper-icon'
+import {type Component, computed, markRaw, onMounted, onUnmounted, provide, ref, shallowRef} from 'vue';
+import {onClickOutside} from '@vueuse/core';
+
+import {
+  IconCheckboxBlankLine,
+  IconCheckboxMultipleBlankLine,
+  IconCloseLargeLine,
+  IconCpuLine,
+  IconDatabaseFill,
+  IconDatabaseLine,
+  IconRamLine,
+  IconSubtractLine
+} from 'birdpaper-icon';
+
 import IconToggle from "./components/IconToggle.vue";
-import HomeView from "./view/home.vue"
-import InstanceView from "./view/instance.vue"
+import HomeView from "./view/home.vue";
+import InstanceView from "./view/instance.vue";
+import ProgressBar from "./components/ProgressBar.vue";
+
 import {vTopText} from "./utils/topText";
 import {vHover} from "./utils/hover";
 import {vRipple} from "./utils/waves";
 import {isWails} from "./stores/env";
 import {closeWin, WinMaxSize, winMinimize, winToggleMaximise} from "./utils/window";
-import ChildWindow from "./components/ChildWindow.vue";
+import {useSystemStateStore} from "./stores/systemStateStore";
+import {SystemState} from "../bindings/voxesis/src/Common/Entity";
 
-const VIEW_LIST: Ref<{
-  name: string,
-  component: any,
-  introduce: string,
-  line_icon: any,
-  fill_icon: any,
-}[]> = ref([
+interface ViewItem {
+  name: string;
+  component: Component;
+  introduce: string;
+  line_icon: Component;
+  fill_icon: Component;
+}
+
+const VIEW_LIST: ViewItem[] = [
   {
     name: 'instance',
     component: markRaw(InstanceView),
     introduce: "实例",
-    line_icon: markRaw(BirdpaperIcon.IconDatabaseLine),
-    fill_icon: markRaw(BirdpaperIcon.IconDatabaseFill),
-  }
-]);
+    line_icon: markRaw(IconDatabaseLine),
+    fill_icon: markRaw(IconDatabaseFill),
+  },
+];
 
-const view_component = shallowRef({
-  name: "",
-  component: HomeView
-});
+const view_component = shallowRef<ViewItem | null>(null);
 const sidebar_before_top = ref("-50vh");
-const view_list_box = ref();
+const viewListBox = ref<HTMLElement | null>(null);
 
-const toggleView = (view: typeof VIEW_LIST.value[number]['name']) => {
-  const targetView = VIEW_LIST.value.find(item => item.name === view);
+const ResponsiveHeight = computed(() => !isWails.value ? "100vh" : "calc(100% - 50px)");
+
+// document.documentElement.setAttribute('data-theme', 'dark');
+
+const systemStateStore = useSystemStateStore();
+const systemState = computed<SystemState | undefined>(() => systemStateStore.systemStates[systemStateStore.systemStates.length - 1]);
+
+const detailVisible = ref(false);
+const systemStateRef = ref(null);
+onClickOutside(systemStateRef, () => (detailVisible.value = false));
+
+const toggleView = (viewName: string) => {
+  const targetView = VIEW_LIST.find(item => item.name === viewName);
+  if (!targetView) return;
+
   const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const index = VIEW_LIST.value.indexOf(targetView!);
-  const itemHeight = 35 + (0.5 * rootFontSize);
+  const index = VIEW_LIST.indexOf(targetView);
+  const itemHeight = 38 + rootFontSize;
   const totalOffset = index * itemHeight + rootFontSize;
 
   sidebar_before_top.value = totalOffset + "px";
+  view_component.value = targetView;
+};
 
-  if (targetView) {
-    view_component.value = {
-      name: view,
-      component: targetView.component
-    };
-  }
-}
+const handleWheelScroll = (event: WheelEvent) => {
+  if (!view_component.value) return;
 
-const ResponsiveHeight = ref("calc(100% - 50px)")
+  const isScrollingDown = event.deltaY > 0;
+  const currentIndex = VIEW_LIST.findIndex(component => component.name === view_component.value!.name);
 
-watch(isWails, () => {
-  ResponsiveHeight.value = !isWails ? "calc(100% - 50px)" : "100vh"
-})
-
-onMounted(() => {
-  const viewListBoxWheel = (event: WheelEvent) => {
-    const ScrollDirection = event.deltaY > 0;
-    const ViewIndex = VIEW_LIST.value.findIndex(component => component.name === view_component.value.name);
-
-    if (ScrollDirection) {
-      if (ViewIndex < VIEW_LIST.value.length - 1) {
-        toggleView(VIEW_LIST.value[ViewIndex + 1].name)
-      }
-    } else {
-      if (ViewIndex > 0) {
-        toggleView(VIEW_LIST.value[ViewIndex - 1].name)
-      }
+  if (isScrollingDown) {
+    if (currentIndex < VIEW_LIST.length - 1) {
+      toggleView(VIEW_LIST[currentIndex + 1].name);
+    }
+  } else {
+    if (currentIndex > 0) {
+      toggleView(VIEW_LIST[currentIndex - 1].name);
     }
   }
+};
 
-  view_list_box.value.addEventListener('wheel', (e: WheelEvent) => viewListBoxWheel(e))
-  view_list_box.value.removeEventListener('wheel', (e: WheelEvent) => viewListBoxWheel(e))
+onMounted(() => {
+  systemStateStore.ListenState();
+  if (viewListBox.value) {
+    viewListBox.value.addEventListener('wheel', handleWheelScroll);
+  }
+});
+
+onUnmounted(() => {
+  if (viewListBox.value) {
+    viewListBox.value.removeEventListener('wheel', handleWheelScroll);
+  }
 });
 
 provide('AppViewMethod', {
   toggleView,
-})
+});
 </script>
 
 <style scoped>
 .header {
   width: 100%;
   height: 50px;
-  padding: var(--spacing-xs);
+  padding: 0 var(--spacing-sm);
   background-color: var(--color-background-secondary);
   border-bottom: 1px solid var(--color-border);
   box-shadow: var(--shadow-default);
-
   --wails-draggable: drag;
-
   display: flex;
   align-items: center;
-
   z-index: 99999;
-
   transition: all var(--transition-normal);
   backdrop-filter: var(--header-backdrop-filter, blur(12px));
 }
 
 .header-control {
   margin-left: auto;
-  padding: 0;
   --wails-draggable: no-drag;
   display: flex;
   flex-direction: row;
@@ -164,51 +205,48 @@ provide('AppViewMethod', {
   align-items: center;
   justify-content: center;
   position: relative;
-  z-index: 1;
-
-  transition: all var(--transition-fast);
+  transition: all var(--transition-fast) ease;
 }
 
 .header-btn:hover {
   background-color: var(--color-background-tertiary);
+  transform: scale(1.05);
+}
+
+.header-btn:last-child:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
 }
 
 .sidebar {
   width: 40px;
   height: v-bind(ResponsiveHeight);
-
   padding-top: var(--spacing-md);
+  padding-bottom: 70px;
   list-style: none;
   background-color: var(--color-background-secondary);
   border-right: 1px solid var(--color-border);
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
-
   display: flex;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-sm);
   flex-direction: column;
   align-items: center;
-
   position: relative;
-
   z-index: 99999;
-
   transition: all var(--transition-normal);
   backdrop-filter: var(--backdrop-filter, blur(10px));
 }
 
 .sidebar::before {
   content: "";
-  width: 35px;
-  height: 35px;
-
+  width: 38px;
+  height: 38px;
   background-color: var(--color-primary);
-  border-radius: var(--radius-md);
-
+  border-radius: var(--radius-lg);
   position: absolute;
   top: v-bind(sidebar_before_top);
-
-  transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 2px 8px rgba(66, 184, 131, 0.3);
+  transition: top 300ms ease-in-out;
+  box-shadow: 0 4px 12px rgba(66, 184, 131, 0.4);
 }
 
 .sidebar:deep(svg) {
@@ -216,77 +254,137 @@ provide('AppViewMethod', {
   transition: all var(--transition-fast);
 }
 
-.sidebar > li {
+.sidebar .item {
   width: 35px;
   height: 35px;
-
-  border-radius: var(--radius-md);
-
+  border-radius: var(--radius-lg);
   position: relative;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   cursor: pointer;
-
   transition: all var(--transition-fast);
   z-index: 2;
 }
 
-.sidebar > li:hover {
+.sidebar .item:hover {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-disabled));
-  transform: scale(1.15);
-  box-shadow: var(--shadow-hover);
-  border-radius: var(--radius-lg);
+  transform: scale(1.1);
+  box-shadow: none;
 }
 
 .sidebar-text {
   width: auto;
   min-width: 50px;
-  height: 20px;
-
-  margin: 0;
+  height: 25px;
   padding: var(--spacing-xs) var(--spacing-sm);
   box-sizing: border-box;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   color: var(--color-text);
   background-color: var(--color-background-secondary);
-
+  box-shadow: var(--shadow-default);
   position: absolute;
-  left: 40px;
-
+  left: 0;
   display: flex;
   justify-content: flex-start;
   align-items: center;
   white-space: nowrap;
-
   opacity: 0;
-  transform: translateX(-55px);
-
-  transition: opacity 0.25s ease, transform var(--transition-normal);
+  pointer-events: none;
+  transition: opacity 0.2s ease, left 0.3s ease;
+  z-index: 100;
 }
 
-.sidebar > li:hover .sidebar-text {
+.sidebar .item:hover .sidebar-text {
   opacity: 1;
-  transform: translateX(0);
+  left: 40px;
 }
 
 .view-box {
   width: calc(100% - 40px);
   height: v-bind(ResponsiveHeight);
-
   overflow: hidden;
-
   position: absolute;
   right: 0;
   bottom: 0;
 }
 
+.system-state {
+  width: 90%;
+  height: 40px;
+  font-size: 0.6rem;
+  padding: var(--spacing-xs) 0;
+  margin-top: auto;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  position: absolute;
+  bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid transparent;
+}
+
+.system-state .summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  color: var(--color-text);
+}
+
+.system-state .summary span {
+  display: flex;
+  align-items: center;
+  gap: 0.5px;
+}
+
+.system-state:hover {
+  background: var(--color-background-tertiary);
+  border-color: var(--color-border);
+}
+
+.system-state .detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: 180px;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background-color: var(--color-background-secondary);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lg);
+  position: absolute;
+  bottom: -5px;
+  left: calc(100% + 10px);
+  opacity: 0;
+  transform: translateX(10px) scale(0.95);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  transform-origin: bottom left;
+}
+
+.system-state.is-open .detail {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+.system-state .detail-item {
+  display: grid;
+  grid-template-columns: 50px 1fr 40px;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
 .fade-enter-active,
 .fade-leave-active {
-  transition: all var(--transition-slow) cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
   position: absolute;
   width: 100%;
   top: 0;
@@ -294,21 +392,11 @@ provide('AppViewMethod', {
 
 .fade-enter-from {
   opacity: 0;
-  transform: translateX(30px);
-}
-
-.fade-enter-to {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.fade-leave-from {
-  opacity: 1;
-  transform: translateX(0);
+  transform: translateX(20px);
 }
 
 .fade-leave-to {
   opacity: 0;
-  transform: translateX(-30px);
+  transform: translateX(-20px);
 }
 </style>

@@ -44,7 +44,6 @@ const AppViewMethod: { toggle_view: (view: string) => void } | undefined = injec
 const isVisible = ref(false);
 
 onMounted(() => {
-  // 组件挂载后触发入场动画
   const timeout = setTimeout(() => {
     isVisible.value = true;
   }, 100);
@@ -62,7 +61,7 @@ onMounted(() => {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  background: var(--color-background-app);
+  background: var(--color-background);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -98,9 +97,9 @@ onMounted(() => {
 .welcome-title {
   font-size: 2.2rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--color-text);
   margin: 0 0 1rem 0;
-  text-shadow: var(--text-shadow);
+  text-shadow: var(--shadow-hover);
   opacity: 0;
   transform: translateY(30px);
   transition: all 0.5s ease-out 0.1s;
@@ -113,7 +112,7 @@ onMounted(() => {
 
 .welcome-subtitle {
   font-size: 1.2rem;
-  color: var(--color-accent);
+  color: var(--color-text);
   margin: 0 0 1.5rem 0;
   font-weight: 500;
   opacity: 0;
@@ -129,7 +128,7 @@ onMounted(() => {
 .welcome-divider {
   width: 0;
   height: 10px;
-  background-color: var(--color-accent);
+  background-color: var(--color-primary);
   margin: 0 auto 1.5rem;
   border-radius: 2px;
   transition: width 0.6s ease-out 0.4s, height 0.4s ease-out 0.6s;
@@ -179,24 +178,24 @@ onMounted(() => {
 }
 
 .primary {
-  background-color: var(--color-accent);
+  background-color: var(--color-primary);
   color: white;
 }
 
 .primary:hover {
-  background-color: var(--color-background-header-hover);
+  background-color: var(--color-primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .secondary {
-  background-color: var(--color-background-card);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border-default);
+  background-color: var(--color-background-secondary);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-background-elevated);
 }
 
 .secondary:hover {
-  background-color: var(--color-background-header);
+  background-color: var(--color-background-secondary);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -206,15 +205,20 @@ onMounted(() => {
   height: 120px;
   object-fit: contain;
   cursor: pointer;
+  animation: movement 1.8s infinite;
   transition: all 0.3s ease-in-out;
 }
 
-.app-logo:hover {
-  transform: rotate(360deg) scale(1.2);
-}
-
-.app-logo:active {
-  transform: scale(0.9);
+@keyframes movement {
+  0% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.1);
+  }
 }
 
 @media (max-width: 768px) {

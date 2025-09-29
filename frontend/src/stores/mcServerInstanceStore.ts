@@ -1,9 +1,10 @@
 // mcServerInstanceStore.ts
 
-import {defineStore} from 'pinia';
+import {createPinia, defineStore, setActivePinia} from 'pinia';
 import {McServerConfigManager, McServerManager, ServerConfig} from "../instance/mcServerInstanceManager";
 import {readonly, ref} from "vue";
 import {Events} from "@wailsio/runtime";
+import {usePlayerListStore} from "./playerListStore";
 
 export type InstanceCreationInfo = Omit<ServerConfig, "outputEventName">;
 
@@ -26,12 +27,15 @@ export type InstanceState = {
 }
 
 const mcServerConfigManager = new McServerConfigManager();
+const pinia = createPinia()
+
+setActivePinia(pinia)
+const playerListStore = usePlayerListStore()
 
 export const useInstancesStore = defineStore('instance', () => {
     const instances = ref<InstanceState[]>([]);
     const isInitialized = ref(false);
     let onOutputCallback: OutputCallback | null = null;
-
 
     const findInstance = (id: string) => instances.value.find(inst => inst.id === id);
 
@@ -49,6 +53,10 @@ export const useInstancesStore = defineStore('instance', () => {
             if (onOutputCallback) {
                 onOutputCallback({id: instance.id, data: data.data});
             }
+
+            data.data.forEach((line: string) => {
+                playerListStore.parseLogMessage(instance.id, line)
+            })
         })
     };
 

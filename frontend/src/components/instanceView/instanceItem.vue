@@ -36,7 +36,6 @@
 <script setup lang="ts">
 import {InstanceState, useInstancesStore} from "../../stores/mcServerInstanceStore";
 import {onMounted, onUnmounted} from "vue";
-import {Events} from "@wailsio/runtime";
 
 const props = defineProps<{
   name: string;
