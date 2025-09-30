@@ -5,6 +5,7 @@ import {McServerConfigManager, McServerManager, ServerConfig} from "../instance/
 import {readonly, ref} from "vue";
 import {Events} from "@wailsio/runtime";
 import {usePlayerListStore} from "./playerListStore";
+import {formatDurationFromTimestamp} from "../utils/date";
 
 export type InstanceCreationInfo = Omit<ServerConfig, "outputEventName">;
 
@@ -161,11 +162,11 @@ export const useInstancesStore = defineStore('instance', () => {
                 instance.processState.status = 'running';
                 instance.processState.cpu.push({
                     value: status.cpu,
-                    time: status.runTime,
+                    time: new Date().toLocaleTimeString(),
                 });
                 instance.processState.memory.push({
                     value: status.memory,
-                    time: status.runTime,
+                    time: new Date().toLocaleTimeString(),
                 });
                 instance.processState.pid = status.pid;
                 instance.processState.runTime = status.runTime;

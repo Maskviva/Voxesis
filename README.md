@@ -6,7 +6,8 @@
 
 Voxesis 旨在提供一个优雅、强大且极具拓展性的服务器管理体验。它不仅是一个工具，更是一个开放的生态平台，允许您通过插件和主题打造完全个性化的管理面板。
 
-🌐 [插件模板](https://gitee.com/Maskviva/voxesis-plugin-example) | 📖 [开发者文档](developer.md) | 🐛 [问题反馈](https://gitee.com/Maskviva/voxesis/issues)
+🌐 [插件模板](https://gitee.com/Maskviva/voxesis-plugin-example) | 📖 [开发者文档](https://maskviva.github.io/#/developer) |
+🐛 [问题反馈](https://gitee.com/Maskviva/voxesis/issues)
 
 ## ✨ 核心特性
 

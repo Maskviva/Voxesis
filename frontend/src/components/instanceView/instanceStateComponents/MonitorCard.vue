@@ -56,6 +56,29 @@ function setChartOption() {
     return;
   }
 
+  const maxDataPoints = 300;
+
+  const limitedSeries = props.series.map(s => {
+    let limitedData: ChartDataPoint[];
+    if (s.data.length <= maxDataPoints) {
+      limitedData = s.data;
+    } else {
+      limitedData = [];
+      const step = s.data.length / maxDataPoints;
+      for (let i = 0; i < maxDataPoints; i++) {
+        const index = Math.floor(i * step);
+        if (index < s.data.length) {
+          limitedData.push(s.data[index]);
+        }
+      }
+    }
+
+    return {
+      ...s,
+      data: limitedData
+    };
+  });
+
   const option = {
     animation: false,
     tooltip: {
@@ -76,7 +99,7 @@ function setChartOption() {
     xAxis: {
       type: 'category',
       boundaryGap: false,
-      data: props.series[0].data.map(d => d.time),
+      data: limitedSeries[0].data.map(d => d.time),
     },
     yAxis: {
       type: 'value',
@@ -86,12 +109,12 @@ function setChartOption() {
         }
       }
     },
-    series: props.series.map(s => ({
+    series: limitedSeries.map(s => ({
       name: s.label,
       type: 'line',
-      smooth: false,         // 平滑曲线
-      showSymbol: false,    // 不显示数据点标记，更简洁
-      data: s.data.map(d => d.value.toFixed(4)),
+      smooth: false,
+      showSymbol: false,
+      data: s.data.map(d => parseFloat(d.value.toFixed(4))),
       itemStyle: {
         color: s.color,
       },
@@ -103,11 +126,11 @@ function setChartOption() {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
           {
             offset: 0,
-            color: `${s.color}80` // 顶部颜色，约50%透明度
+            color: `${s.color}80`
           },
           {
             offset: 1,
-            color: `${s.color}00` // 底部颜色，完全透明
+            color: `${s.color}00`
           }
         ])
       }
@@ -116,6 +139,7 @@ function setChartOption() {
 
   chartInstance.setOption(option);
 }
+
 
 onMounted(() => {
   if (chartRef.value) {

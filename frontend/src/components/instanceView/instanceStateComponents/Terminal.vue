@@ -58,26 +58,47 @@ const historyIndex = ref(-1);
 const mouseDownTime = ref(0);
 
 const unRunning = ref(1);
+const terminalInitef = ref(false)
 
 const terminalLines = ref<TerminalLine[]>([]);
+const terminalLined: string[] = []
 
 instancesStore.setOnOutput(({id, data}) => {
   if (id !== props.instance.id) return;
 
-  terminalLines.value.push({
-    type: 'output',
-    content: ansiConverter.ansi_to_html(data),
-  });
-  scrollToBottom();
+  if (!terminalInitef.value) {
+    terminalLined.push(data)
+    return;
+  }
+
+  appendLine(data)
 })
 
 onMounted(() => {
   focusInput();
+  instancesStore.instances.forEach(instance => {
+    if (instance.id === props.instance.id) {
+      instance.processState.output.forEach(line => appendLine(line))
+    }
+  })
+  terminalInitef.value = true;
+
+  terminalLined.forEach(line => {
+    appendLine(line)
+  })
 
   setTimeout(() => {
     unRunning.value = 0;
   }, 5000)
 });
+
+const appendLine = (line: string) => {
+  terminalLines.value.push({
+    type: 'output',
+    content: ansiConverter.ansi_to_html(line),
+  })
+  scrollToBottom();
+};
 
 const focusInput = () => {
   if (terminalInput.value) {

@@ -127,8 +127,8 @@ const toggleView = (viewName: string) => {
 
   const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
   const index = VIEW_LIST.indexOf(targetView);
-  const itemHeight = 38 + rootFontSize;
-  const totalOffset = index * itemHeight + rootFontSize;
+  const itemHeight = 35 + rootFontSize * 0.75;
+  const totalOffset = index * itemHeight + rootFontSize - 1;
 
   sidebar_before_top.value = totalOffset + "px";
   view_component.value = targetView;

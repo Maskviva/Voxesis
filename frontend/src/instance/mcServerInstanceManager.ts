@@ -39,8 +39,6 @@ export interface ServerConfig {
     outputEventName: string;
 }
 
-export const ServersState: ShallowRef<Map<string, ServerState>> = shallowRef(new Map());
-
 const handleError = (operation: string, error: any) => {
     console.error(`${operation} error:`, error);
 };

@@ -102,6 +102,7 @@ onMounted(() => {
   text-shadow: var(--shadow-hover);
   opacity: 0;
   transform: translateY(30px);
+  animation: movement 1.8s infinite 0.08s;
   transition: all 0.5s ease-out 0.1s;
 }
 
@@ -117,6 +118,7 @@ onMounted(() => {
   font-weight: 500;
   opacity: 0;
   transform: translateY(30px);
+  animation: movement 1.8s infinite 0.16s;
   transition: all 0.5s ease-out 0.2s;
 }
 
