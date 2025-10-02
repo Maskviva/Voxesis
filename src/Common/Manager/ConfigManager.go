@@ -22,12 +22,14 @@ type ConfigManager struct {
 	jsonConfig *vconfigimpl.BaseJsonImpl
 	propConfig *vconfigimpl.BasePropertiesImpl
 	yamlConfig *vconfigimpl.BaseYamlImpl
+	Path       string
 }
 
 // NewConfigManager 创建一个新的配置管理器实例
 func NewConfigManager(configType ConfigType, filePath string) (*ConfigManager, error) {
 	manager := &ConfigManager{
 		configType: configType,
+		Path:       filePath,
 	}
 
 	var err error

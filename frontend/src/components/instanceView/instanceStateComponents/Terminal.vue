@@ -37,6 +37,7 @@ import {nextTick, onMounted, ref} from 'vue';
 import {ElMessage} from "element-plus";
 import {AnsiUp} from "ansi_up/ansi_up";
 import {InstanceState, useInstancesStore} from "../../../stores/mcServerInstanceStore";
+import {usePlayerListStore} from "../../../stores/playerListStore";
 
 interface TerminalLine {
   type: 'output' | 'command' | 'error' | 'info';
@@ -48,6 +49,7 @@ const props = defineProps<{
 }>();
 
 const instancesStore = useInstancesStore();
+const playerListStore = usePlayerListStore()
 const ansiConverter = new AnsiUp();
 
 const terminalOutput = ref<HTMLElement | null>(null);
@@ -63,22 +65,28 @@ const terminalInitef = ref(false)
 const terminalLines = ref<TerminalLine[]>([]);
 const terminalLined: string[] = []
 
-instancesStore.setOnOutput(({id, data}) => {
-  if (id !== props.instance.id) return;
+instancesStore.subscribeToOutput(props.instance.instanceInfo.id, ({id, data}) => {
+  if (id !== props.instance.instanceInfo.id) return;
 
   if (!terminalInitef.value) {
-    terminalLined.push(data)
+    terminalLined.push(String(data))
     return;
   }
 
-  appendLine(data)
+  data.forEach(line => {
+    playerListStore.parseLogMessage(props.instance.instanceInfo.id, line)
+  })
+
+  appendLine(String(data))
 })
 
 onMounted(() => {
   focusInput();
   instancesStore.instances.forEach(instance => {
-    if (instance.id === props.instance.id) {
-      instance.processState.output.forEach(line => appendLine(line))
+    if (instance.instanceInfo.id === props.instance.instanceInfo.id) {
+      instance.processState.output.forEach(line => {
+        appendLine(line)
+      })
     }
   })
   terminalInitef.value = true;
@@ -122,7 +130,7 @@ const executeCommand = () => {
   commandHistory.value.push(command);
   historyIndex.value = commandHistory.value.length;
 
-  instancesStore.sendCommandToInstance(props.instance.id, command)
+  instancesStore.sendCommandToInstance(props.instance.instanceInfo.id, command)
 
   commandInput.value = '';
 

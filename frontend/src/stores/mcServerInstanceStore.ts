@@ -1,15 +1,11 @@
 // mcServerInstanceStore.ts
 
-import {createPinia, defineStore, setActivePinia} from 'pinia';
+import {defineStore} from 'pinia';
 import {McServerConfigManager, McServerManager, ServerConfig} from "../instance/mcServerInstanceManager";
 import {readonly, ref} from "vue";
 import {Events} from "@wailsio/runtime";
-import {usePlayerListStore} from "./playerListStore";
-import {formatDurationFromTimestamp} from "../utils/date";
 
-export type InstanceCreationInfo = Omit<ServerConfig, "outputEventName">;
-
-export type OutputCallback = (output: { id: string, data: string }) => void;
+export type OutputCallback = (output: { id: number, data: string[] }) => void;
 
 export type ProcessState = {
     status: 'running' | 'stopped' | 'starting' | 'stopping';
@@ -21,28 +17,23 @@ export type ProcessState = {
 }
 
 export type InstanceState = {
-    id: string;
     instanceInfo: ServerConfig;
     processState: ProcessState;
     serverManager: McServerManager;
 }
 
 const mcServerConfigManager = new McServerConfigManager();
-const pinia = createPinia()
-
-setActivePinia(pinia)
-const playerListStore = usePlayerListStore()
 
 export const useInstancesStore = defineStore('instance', () => {
     const instances = ref<InstanceState[]>([]);
     const isInitialized = ref(false);
-    let onOutputCallback: OutputCallback | null = null;
+    const outputCallbacks = new Map<number, OutputCallback[]>();
 
-    const findInstance = (id: string) => instances.value.find(inst => inst.id === id);
+    const findInstance = (id: number) => instances.value.find(inst => inst.instanceInfo.id === id);
 
     const setupOutputListener = (instance: InstanceState) => {
-        Events.On(instance.instanceInfo.outputEventName, (data) => {
-            const targetInstance = findInstance(instance.id);
+        Events.On("process-" + instance.instanceInfo.id + "-output", (data) => {
+            const targetInstance = findInstance(instance.instanceInfo.id);
 
             if (targetInstance) {
                 targetInstance.processState.output.push(data.data);
@@ -51,18 +42,27 @@ export const useInstancesStore = defineStore('instance', () => {
                 }
             }
 
-            if (onOutputCallback) {
-                onOutputCallback({id: instance.id, data: data.data});
+            if (outputCallbacks.has(instance.instanceInfo.id)) {
+                outputCallbacks.get(instance.instanceInfo.id)?.forEach(cb => cb({
+                    id: instance.instanceInfo.id,
+                    data: data.data
+                }));
             }
-
-            data.data.forEach((line: string) => {
-                playerListStore.parseLogMessage(instance.id, line)
-            })
         })
     };
 
-    function setOnOutput(callback: OutputCallback) {
-        onOutputCallback = callback;
+    function subscribeToOutput(instanceId: number, callback: OutputCallback) {
+        if (!outputCallbacks.has(instanceId)) {
+            outputCallbacks.set(instanceId, []);
+        }
+        outputCallbacks.get(instanceId)?.push(callback);
+    }
+
+    function unsubscribeFromOutput(instanceId: number, callback: OutputCallback) {
+        if (!outputCallbacks.has(instanceId)) {
+            outputCallbacks.set(instanceId, []);
+        }
+        outputCallbacks.delete(instanceId)
     }
 
     async function initializeStore() {
@@ -73,10 +73,9 @@ export const useInstancesStore = defineStore('instance', () => {
 
         const loadedInstances: InstanceState[] = [];
         for (const [id, config] of Object.entries(serverConfigs)) {
-            const manager = mcServerConfigManager.getServer(id);
+            const manager = mcServerConfigManager.getServer(Number(id));
             if (manager) {
                 const instance: InstanceState = {
-                    id,
                     instanceInfo: config,
                     serverManager: manager,
                     processState: {
@@ -95,16 +94,15 @@ export const useInstancesStore = defineStore('instance', () => {
         instances.value = loadedInstances;
         isInitialized.value = true;
 
-        await Promise.all(instances.value.map(inst => updateInstanceStatus(inst.id)));
+        await Promise.all(instances.value.map(inst => updateInstanceStatus(inst.instanceInfo.id)));
     }
 
-    async function createInstance(creationInfo: InstanceCreationInfo) {
+    async function createInstance(creationInfo: Omit<ServerConfig, "id">) {
         const newServer = await mcServerConfigManager.createServer(creationInfo);
 
         if (newServer) {
             const {id, manager, config} = newServer;
             const newInstance: InstanceState = {
-                id,
                 instanceInfo: config,
                 serverManager: manager,
                 processState: {
@@ -124,12 +122,12 @@ export const useInstancesStore = defineStore('instance', () => {
         }
     }
 
-    async function deleteInstance(id: string) {
+    async function deleteInstance(id: number) {
         await mcServerConfigManager.deleteServer(id);
-        instances.value = instances.value.filter(instance => instance.id !== id);
+        instances.value = instances.value.filter(instance => instance.instanceInfo.id !== id);
     }
 
-    async function startInstance(id: string) {
+    async function startInstance(id: number) {
         const instance = findInstance(id);
         if (instance && instance.processState.status === 'stopped') {
             instance.processState.status = 'starting';
@@ -138,23 +136,24 @@ export const useInstancesStore = defineStore('instance', () => {
         }
     }
 
-    async function stopInstance(id: string) {
+    async function stopInstance(id: number, playerListStore: any) {
         const instance = findInstance(id);
         if (instance && instance.processState.status === 'running') {
             instance.processState.status = 'stopping';
             await instance.serverManager.stop();
             await updateInstanceStatus(id);
+            playerListStore.removeAllPlayers(id)
         }
     }
 
-    async function sendCommandToInstance(id: string, command: string) {
+    async function sendCommandToInstance(id: number, command: string) {
         const instance = findInstance(id);
         if (instance && instance.processState.status === 'running') {
             await instance.serverManager.sendCommand(command);
         }
     }
 
-    async function updateInstanceStatus(id: string) {
+    async function updateInstanceStatus(id: number) {
         const instance = findInstance(id);
         if (instance) {
             const status = await instance.serverManager.getStatus();
@@ -182,7 +181,8 @@ export const useInstancesStore = defineStore('instance', () => {
         instances: readonly(instances),
         isInitialized: readonly(isInitialized),
 
-        setOnOutput,
+        subscribeToOutput,
+        unsubscribeFromOutput,
         initializeStore,
         createInstance,
         deleteInstance,

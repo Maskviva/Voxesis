@@ -87,6 +87,9 @@ import {isWails} from "./stores/env";
 import {closeWin, WinMaxSize, winMinimize, winToggleMaximise} from "./utils/window";
 import {useSystemStateStore} from "./stores/systemStateStore";
 import {SystemState} from "../bindings/voxesis/src/Common/Entity";
+import {GetProcessStatus, NewProcess, Start, Stop} from "../bindings/voxesis/src/Communication/InterProcess/processipc";
+import {ProcessType} from "../bindings/voxesis/src/Common/Manager";
+import {Events} from "@wailsio/runtime";
 
 interface ViewItem {
   name: string;
@@ -384,7 +387,7 @@ provide('AppViewMethod', {
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
   position: absolute;
   width: 100%;
   top: 0;

@@ -32,6 +32,12 @@ func (c *ConfigIpc) NewConfigManager(managerType vmanager.ConfigType, filePath s
 		filePath = path.Join(vcommon.AppDir, filePath)
 	}
 
+	for mUuid, manager := range c.uuidMap {
+		if manager.Path == filePath {
+			return &mUuid, nil
+		}
+	}
+
 	manager, err := vmanager.NewConfigManager(managerType, filePath)
 	if err != nil {
 		e := err.Error()

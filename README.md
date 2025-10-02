@@ -1,6 +1,6 @@
 # Voxesis - 新一代可拓展 Minecraft 服务器管理面板
 
->当前版本为[上一代](https://gitee.com/Maskviva/voxesis_native)的重构版 当前距离首个正式版的进度大约在 35% 左右
+>当前版本为[上一代](https://gitee.com/Maskviva/voxesis_native)的重构版 当前距离首个正式版的进度大约在 38% 左右
 
 > 一款专为 Minecraft Server 设计的、高度模块化的现代桌面管理应用。
 

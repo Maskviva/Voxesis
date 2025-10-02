@@ -1,5 +1,5 @@
 import {defineStore} from "pinia";
-import {reactive, toRefs} from "vue";
+import {reactive, readonly, toRefs} from "vue";
 
 import Avatar1 from '../assets/images/Avatar1.avif';
 import Avatar2 from '../assets/images/Avatar2.avif';
@@ -46,19 +46,11 @@ const getRandomAvatar = (): string =>
 
 const LOG_MATCHERS: LogMatcher[] = [
     {
-        regex: /\[(.*?) INFO] Player (?:Spawned|connected): (.*?) xuid: ([a-zA-Z0-9]+)/,
+        regex: /.*?Player Spawned: (.*?) xuid: ([a-zA-Z0-9]+)/,
         action: PlayerAction.JOIN
     },
     {
-        regex: /(.*?) INFO \[Server] Player (?:Spawned|connected): (.*?) xuid: ([a-zA-Z0-9]+)/,
-        action: PlayerAction.JOIN
-    },
-    {
-        regex: /\[(.*?) INFO] Player disconnected: (.*?), xuid: ([a-zA-Z0-9]+)/,
-        action: PlayerAction.LEAVE
-    },
-    {
-        regex: /(.*?) INFO \[Server] Player disconnected: (.*?), xuid: ([a-zA-Z0-9]+)/,
+        regex: /.*?Player disconnected: (.*?) xuid: ([a-zA-Z0-9]+)/,
         action: PlayerAction.LEAVE
     },
 ];
@@ -70,18 +62,18 @@ export const usePlayerListStore = defineStore('playerList', () => {
         servers: {},
     });
 
-    const ensureServerExists = (serverId: string): void => {
+    const ensureServerExists = (serverId: number): void => {
         if (!state.servers[serverId]) {
             state.servers[serverId] = [];
         }
     };
 
-    const findPlayerIndex = (serverId: string, uid: string): number => {
+    const findPlayerIndex = (serverId: number, uid: string): number => {
         const serverPlayers = state.servers[serverId];
         return serverPlayers ? serverPlayers.findIndex(p => p.uid === uid) : -1;
     };
 
-    const addPlayer = (serverId: string, playerName: string, uid: string): void => {
+    const addPlayer = (serverId: number, playerName: string, uid: string): void => {
         ensureServerExists(serverId);
 
         if (findPlayerIndex(serverId, uid) !== -1) return;
@@ -96,21 +88,22 @@ export const usePlayerListStore = defineStore('playerList', () => {
         state.servers[serverId].push(newPlayer);
     };
 
-    const removePlayer = (serverId: string, uid: string): void => {
+    const removePlayer = (serverId: number, uid: string): void => {
         const playerIndex = findPlayerIndex(serverId, uid);
         if (playerIndex === -1) return;
 
         state.servers[serverId].splice(playerIndex, 1);
     };
 
-    const parseLogMessage = (serverId: string, logMessage: string): void => {
+    const parseLogMessage = (serverId: number, logMessage: string): void => {
         const cleanedLog = removeAnsiCodes(logMessage);
 
         for (const matcher of LOG_MATCHERS) {
             const match = matcher.regex.exec(cleanedLog);
+            console.log(serverId, match, state.servers, state.servers[serverId]);
             if (!match) continue;
 
-            const [, , playerName, uid] = match;
+            const [, playerName, uid] = match;
 
             switch (matcher.action) {
                 case PlayerAction.JOIN:
@@ -124,16 +117,21 @@ export const usePlayerListStore = defineStore('playerList', () => {
         }
     };
 
-    const getServerPlayers = (serverId: string): Player[] =>
+    const getServerPlayers = (serverId: number): Player[] =>
         state.servers[serverId] || [];
 
     const getAllPlayers = (): Player[] =>
         Object.values(state.servers).flat();
 
+    const removeAllPlayers = (serverId: number): void => {
+        state.servers[serverId] = [];
+    };
+
     return {
-        ...toRefs(state),
+        ...toRefs(readonly(state)),
         parseLogMessage,
         getServerPlayers,
         getAllPlayers,
+        removeAllPlayers,
     };
 });

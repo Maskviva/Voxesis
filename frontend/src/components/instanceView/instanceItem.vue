@@ -15,14 +15,14 @@
       <button
           class="action-button start"
           :disabled="instance.processState.status === 'running' || instance.processState.status === 'starting'"
-          @click.stop="instancesStore.startInstance(instance.id)"
+          @click.stop="instancesStore.startInstance(instance.instanceInfo.id)"
       >
         启动
       </button>
       <button
           class="action-button stop"
           :disabled="instance.processState.status === 'stopped'"
-          @click.stop="instancesStore.stopInstance(instance.id)"
+          @click.stop="instancesStore.stopInstance(instance.instanceInfo.id, playerListStore)"
       >
         停止
       </button>
@@ -36,6 +36,7 @@
 <script setup lang="ts">
 import {InstanceState, useInstancesStore} from "../../stores/mcServerInstanceStore";
 import {onMounted, onUnmounted} from "vue";
+import {usePlayerListStore} from "../../stores/playerListStore";
 
 const props = defineProps<{
   name: string;
@@ -48,12 +49,13 @@ const emit = defineEmits<{
 }>();
 
 const instancesStore = useInstancesStore()
+const playerListStore = usePlayerListStore()
 const instance = instancesStore.instances.find(instance => instance.instanceInfo.name === props.name)
 
 let onlineListener: NodeJS.Timeout | number | null = null;
 
 const removeInstance = () => {
-  instancesStore.deleteInstance(instance.id)
+  instancesStore.deleteInstance(instance.instanceInfo.id)
 };
 
 const showChildWindow = () => {
@@ -73,7 +75,7 @@ const getStatusText = (): string => {
 onMounted(() => {
   onlineListener = setInterval(() => {
     if (instance.processState.status != "running") return;
-    instancesStore.updateInstanceStatus(instance.id)
+    instancesStore.updateInstanceStatus(instance.instanceInfo.id)
   }, 1000);
 });
 

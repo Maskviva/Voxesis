@@ -12,24 +12,24 @@
           <button
               class="action-button start"
               :disabled="instance.processState.status === 'running' || instance.processState.status === 'starting'"
-              @click.stop="instancesStore.startInstance(instance.id)"
+              @click.stop="instancesStore.startInstance(instance.instanceInfo.id)"
           >
             启动
           </button>
           <button
               class="action-button stop"
               :disabled="instance.processState.status === 'stopped'"
-              @click.stop="instancesStore.stopInstance(instance.id)"
+              @click.stop="instancesStore.stopInstance(instance.instanceInfo.id, playerListStore)"
           >
             停止
           </button>
           <button class="action-button del"
-                  @click.stop="instancesStore.deleteInstance(instance.id)">
+                  @click.stop="instancesStore.deleteInstance(instance.instanceInfo.id)">
             删除实例
           </button>
         </div>
         <SystemInfoCard :system-info="systemInfo"/>
-        <PlayerListCard :id="instance.id"/>
+        <PlayerListCard :id="instance.instanceInfo.id" :instance="instance"/>
       </div>
     </div>
   </ChildWindow>
@@ -52,6 +52,7 @@ const props = defineProps<{
 }>();
 
 const instancesStore = useInstancesStore()
+const playerListStore = usePlayerListStore()
 const systemStateStore = useSystemStateStore()
 const instance = instancesStore.instances.find(s => s.instanceInfo.name === props.name) as InstanceState;
 
@@ -97,15 +98,6 @@ const monitorSeries = computed<Series[]>(() => {
     }
   ];
 });
-
-const playerListStore = usePlayerListStore()
-
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'a') {
-    console.log("准备添加玩家...");
-    playerListStore.parseLogMessage(instance.id, "[2025-09-29 10:00:00 INFO] Player Spawned: Steve xuid: 123456789");
-  }
-})
 </script>
 
 <style scoped>

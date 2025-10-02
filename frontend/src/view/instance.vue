@@ -60,7 +60,8 @@ import InstanceItem from "../components/instanceView/instanceItem.vue";
 import InstanceModal from "../components/instanceView/instanceModal.vue";
 import {ElMessage} from "element-plus";
 import instanceState from "../components/instanceView/instanceState.vue";
-import {InstanceCreationInfo, useInstancesStore} from "../stores/mcServerInstanceStore";
+import {useInstancesStore} from "../stores/mcServerInstanceStore";
+import {ServerConfig} from "../instance/mcServerInstanceManager";
 
 const instancesStore = useInstancesStore()
 
@@ -68,7 +69,7 @@ const instancesRef = ref<HTMLDivElement>()
 const childWindowData = ref<{ name: string }[]>([])
 const runningServers = ref<{ name: string }[]>([])
 
-const newInstance = ref<InstanceCreationInfo>({
+const newInstance = ref<Omit<ServerConfig, "id">>({
   name: "",
   path: "",
   abs: true,
