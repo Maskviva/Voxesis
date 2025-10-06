@@ -15,8 +15,8 @@
 <script setup lang="ts">
 import {computed} from "vue";
 import PlayerCard from "./PlayerCard.vue";
-import {InstanceState} from "../../../stores/mcServerInstanceStore";
-import {usePlayerListStore} from "../../../stores/playerListStore";
+import {InstanceState} from "../../../stores/McServerInstanceStore";
+import {usePlayerListStore} from "../../../stores/PlayerListStore";
 
 const props = defineProps<{
   id: number;

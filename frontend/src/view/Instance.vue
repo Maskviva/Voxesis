@@ -60,8 +60,8 @@ import InstanceItem from "../components/instanceView/instanceItem.vue";
 import InstanceModal from "../components/instanceView/instanceModal.vue";
 import {ElMessage} from "element-plus";
 import instanceState from "../components/instanceView/instanceState.vue";
-import {useInstancesStore} from "../stores/mcServerInstanceStore";
-import {ServerConfig} from "../instance/mcServerInstanceManager";
+import {useInstancesStore} from "../stores/McServerInstanceStore";
+import {ServerConfig} from "../instance/McServerInstanceManager";
 
 const instancesStore = useInstancesStore()
 

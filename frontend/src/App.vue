@@ -32,8 +32,8 @@
     <li ref="systemStateRef" class="system-state" :class="{ 'is-open': detailVisible }"
         @click="detailVisible = !detailVisible">
       <div class="summary">
-        <span><IconCpuLine :size="14"/> {{ systemState ? systemState.CpuUsage.toFixed(0) : "-" }}%</span>
-        <span><IconRamLine :size="14"/> {{ systemState ? systemState.MemoryUsage.toFixed(0) : "-" }}%</span>
+        <span><IconCpuLine size="14"/> {{ systemState ? systemState.CpuUsage.toFixed(0) : "-" }}%</span>
+        <span><IconRamLine size="14"/> {{ systemState ? systemState.MemoryUsage.toFixed(0) : "-" }}%</span>
       </div>
       <div class="detail">
         <div class="detail-item">
@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import {type Component, computed, markRaw, onMounted, onUnmounted, provide, ref, shallowRef} from 'vue';
+import {type Component, computed, markRaw, onMounted, onUnmounted, provide, Ref, ref, shallowRef} from 'vue';
 import {onClickOutside} from '@vueuse/core';
 
 import {
@@ -72,12 +72,15 @@ import {
   IconDatabaseFill,
   IconDatabaseLine,
   IconRamLine,
+  IconSettings4Fill,
+  IconSettings4Line,
   IconSubtractLine
 } from 'birdpaper-icon';
 
 import IconToggle from "./components/IconToggle.vue";
-import HomeView from "./view/home.vue";
-import InstanceView from "./view/instance.vue";
+import HomeView from "./view/Home.vue";
+import SettingView from "./view/Setting.vue";
+import InstanceView from "./view/Instance.vue";
 import ProgressBar from "./components/ProgressBar.vue";
 
 import {vTopText} from "./utils/topText";
@@ -85,11 +88,10 @@ import {vHover} from "./utils/hover";
 import {vRipple} from "./utils/waves";
 import {isWails} from "./stores/env";
 import {closeWin, WinMaxSize, winMinimize, winToggleMaximise} from "./utils/window";
-import {useSystemStateStore} from "./stores/systemStateStore";
+import {useSystemStateStore} from "./stores/SystemStateStore";
 import {SystemState} from "../bindings/voxesis/src/Common/Entity";
-import {GetProcessStatus, NewProcess, Start, Stop} from "../bindings/voxesis/src/Communication/InterProcess/processipc";
-import {ProcessType} from "../bindings/voxesis/src/Common/Manager";
-import {Events} from "@wailsio/runtime";
+import {useAppConfigStore} from "./stores/AppConfigStore";
+import {usePluginListStore} from "./stores/PluginStore";
 
 interface ViewItem {
   name: string;
@@ -99,7 +101,7 @@ interface ViewItem {
   fill_icon: Component;
 }
 
-const VIEW_LIST: ViewItem[] = [
+const VIEW_LIST: Ref<ViewItem[]> = ref([
   {
     name: 'instance',
     component: markRaw(InstanceView),
@@ -107,7 +109,14 @@ const VIEW_LIST: ViewItem[] = [
     line_icon: markRaw(IconDatabaseLine),
     fill_icon: markRaw(IconDatabaseFill),
   },
-];
+  {
+    name: 'setting',
+    component: markRaw(SettingView),
+    introduce: "设置",
+    line_icon: markRaw(IconSettings4Line),
+    fill_icon: markRaw(IconSettings4Fill),
+  }
+]);
 
 const view_component = shallowRef<ViewItem | null>(null);
 const sidebar_before_top = ref("-50vh");
@@ -118,6 +127,8 @@ const ResponsiveHeight = computed(() => !isWails.value ? "100vh" : "calc(100% - 
 // document.documentElement.setAttribute('data-theme', 'dark');
 
 const systemStateStore = useSystemStateStore();
+const appConfigStore = useAppConfigStore()
+const pluginListStore = usePluginListStore()
 const systemState = computed<SystemState | undefined>(() => systemStateStore.systemStates[systemStateStore.systemStates.length - 1]);
 
 const detailVisible = ref(false);
@@ -125,11 +136,11 @@ const systemStateRef = ref(null);
 onClickOutside(systemStateRef, () => (detailVisible.value = false));
 
 const toggleView = (viewName: string) => {
-  const targetView = VIEW_LIST.find(item => item.name === viewName);
+  const targetView = VIEW_LIST.value.find(item => item.name === viewName);
   if (!targetView) return;
 
   const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const index = VIEW_LIST.indexOf(targetView);
+  const index = VIEW_LIST.value.indexOf(targetView);
   const itemHeight = 35 + rootFontSize * 0.75;
   const totalOffset = index * itemHeight + rootFontSize - 1;
 
@@ -141,10 +152,10 @@ const handleWheelScroll = (event: WheelEvent) => {
   if (!view_component.value) return;
 
   const isScrollingDown = event.deltaY > 0;
-  const currentIndex = VIEW_LIST.findIndex(component => component.name === view_component.value!.name);
+  const currentIndex = VIEW_LIST.value.findIndex(component => component.name === view_component.value!.name);
 
   if (isScrollingDown) {
-    if (currentIndex < VIEW_LIST.length - 1) {
+    if (currentIndex < VIEW_LIST.value.length - 1) {
       toggleView(VIEW_LIST[currentIndex + 1].name);
     }
   } else {
@@ -156,6 +167,22 @@ const handleWheelScroll = (event: WheelEvent) => {
 
 onMounted(() => {
   systemStateStore.ListenState();
+  appConfigStore.Load();
+
+  pluginListStore.Load().then(() => {
+    for (const key of pluginListStore.pluginList.keys()) {
+      const plugin = pluginListStore.pluginList.get(key);
+
+      VIEW_LIST.value.push({
+        name: plugin.name,
+        component: markRaw(plugin.component),
+        introduce: plugin.introduce,
+        line_icon: markRaw(plugin.line_icon),
+        fill_icon: markRaw(plugin.fill_icon),
+      })
+    }
+  })
+
   if (viewListBox.value) {
     viewListBox.value.addEventListener('wheel', handleWheelScroll);
   }

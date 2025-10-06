@@ -96,7 +96,7 @@
 
 <script setup lang="ts">
 import {UnwrapRef} from "vue";
-import {ServerConfig} from "../../instance/mcServerInstanceManager";
+import {ServerConfig} from "../../instance/McServerInstanceManager";
 
 const props = defineProps<{
   createInstance: () => void

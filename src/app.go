@@ -37,9 +37,7 @@ func InitAPP(assets embed.FS) *application.App {
 			application.NewService(&InterProcess.LoggerIpc{}),
 			application.NewService(&InterProcess.ConfigIpc{}),
 			application.NewService(&InterProcess.PluginIpc{}),
-			//application.NewService(&InterProcess.OrdinaryProcessIpc{}),
-			//application.NewService(&InterProcess.ConPtyProcessIpc{}),
-			application.NewService(processIpc), // 使用已初始化的实例
+			application.NewService(processIpc),
 			application.NewService(&InterProcess.UtilsIpc{}),
 		},
 		Assets: application.AssetOptions{

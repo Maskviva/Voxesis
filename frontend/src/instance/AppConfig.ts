@@ -38,7 +38,7 @@ export class AppConfig {
         return value!;
     }
 
-    async SetValueOfKey(key: string, value: string) {
+    async SetValueOfKey(key: string, value: any) {
         const err = await SetValueOfKey(this.uuid, key, value, "")
 
         if (err) {

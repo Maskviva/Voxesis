@@ -34,9 +34,9 @@
 </template>
 
 <script setup lang="ts">
-import {InstanceState, useInstancesStore} from "../../stores/mcServerInstanceStore";
+import {InstanceState, useInstancesStore} from "../../stores/McServerInstanceStore";
 import {onMounted, onUnmounted} from "vue";
-import {usePlayerListStore} from "../../stores/playerListStore";
+import {usePlayerListStore} from "../../stores/PlayerListStore";
 
 const props = defineProps<{
   name: string;

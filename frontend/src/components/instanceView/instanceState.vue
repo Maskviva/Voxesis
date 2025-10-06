@@ -43,9 +43,9 @@ import MonitorCard, {type Series} from "./instanceStateComponents/MonitorCard.vu
 import SystemInfoCard, {type SystemInfoItem} from "./instanceStateComponents/SystemInfoCard.vue";
 import PlayerListCard from "./instanceStateComponents/PlayerListCard.vue";
 import Terminal from "./instanceStateComponents/Terminal.vue";
-import {InstanceState, useInstancesStore} from "../../stores/mcServerInstanceStore";
-import {usePlayerListStore} from "../../stores/playerListStore";
-import {useSystemStateStore} from "../../stores/systemStateStore";
+import {InstanceState, useInstancesStore} from "../../stores/McServerInstanceStore";
+import {usePlayerListStore} from "../../stores/PlayerListStore";
+import {useSystemStateStore} from "../../stores/SystemStateStore";
 
 const props = defineProps<{
   name: string;

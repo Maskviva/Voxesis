@@ -6,50 +6,31 @@ import (
 	"os"
 	"path"
 	vcommon "voxesis/src/Common"
-	"voxesis/src/Common/Entity"
 )
 
-func GetPluginList() (*[]entity.Plugin, error) {
-	dirList, err := os.ReadDir(vcommon.PluginDir)
+func ValiPlugin(pluginDir os.DirEntry) error {
+	if !pluginDir.IsDir() {
+		return fmt.Errorf("插件 %s 不是一个目录", pluginDir.Name())
+	}
+
+	var (
+		data       = make(map[string]interface{})
+		pluginName = pluginDir.Name()
+	)
+
+	manifestFile, err := os.ReadFile(path.Join(vcommon.PluginDir, pluginName, "manifest.json"))
 	if err != nil {
-		return nil, fmt.Errorf("读取插件目录失败: %w", err)
+		return fmt.Errorf("读取插件 %s 的 manifest.json 失败: %w", pluginName, err)
 	}
 
-	pluginList, err := validate(dirList)
+	err = json.Unmarshal(manifestFile, &data)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("JSON 解析错误: %e", err)
 	}
 
-	return pluginList, nil
-}
-
-func validate(dirList []os.DirEntry) (*[]entity.Plugin, error) {
-	var pluginList []entity.Plugin
-	var data map[string]interface{}
-
-	for _, dir := range dirList {
-		if !dir.IsDir() {
-			return nil, fmt.Errorf("插件 %s 不是一个目录", dir.Name())
-		}
-
-		manifestFile, err := os.ReadFile(path.Join(vcommon.PluginDir, dir.Name(), "manifest.json"))
-		if err != nil {
-			return nil, fmt.Errorf("读取插件 %s 的 manifest.json 失败: %w", dir.Name(), err)
-		}
-
-		err = json.Unmarshal(manifestFile, &data)
-		if err != nil {
-			return nil, fmt.Errorf("JSON 解析错误: %e", err)
-		}
-
-		if _, err := os.Stat(path.Join(vcommon.PluginDir, dir.Name(), data["mian"].(string))); err == nil {
-			return nil, fmt.Errorf("插件缺少主文件 %s", data["mian"])
-		}
-
-		pluginList = append(pluginList, entity.Plugin{
-			PluginName: dir.Name(),
-			Manifest:   manifestFile,
-		})
+	if _, err := os.Stat(path.Join(vcommon.PluginDir, pluginName, data["main"].(string))); err != nil {
+		return fmt.Errorf("插件缺少主文件 %s", data["main"])
 	}
-	return &pluginList, nil
+
+	return nil
 }
