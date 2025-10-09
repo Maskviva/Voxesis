@@ -36,8 +36,8 @@
 import {nextTick, onMounted, ref} from 'vue';
 import {ElMessage} from "element-plus";
 import {AnsiUp} from "ansi_up/ansi_up";
-import {InstanceState, useInstancesStore} from "../../../stores/McServerInstanceStore";
-import {usePlayerListStore} from "../../../stores/PlayerListStore";
+import {InstanceState, useInstancesStore} from "../../../stores/server/McServerInstanceStore";
+import {usePlayerListStore} from "../../../stores/server/PlayerListStore";
 
 interface TerminalLine {
   type: 'output' | 'command' | 'error' | 'info';

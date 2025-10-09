@@ -21,7 +21,7 @@ type BaseIni interface {
 	GetKey(sectionName, keyName string) (string, error)
 
 	// SetKey 设置INI配置中特定节的键值
-	SetKey(sectionName, keyName, value string) error
+	SetKey(sectionName, keyName, value interface{}) error
 
 	// WatchSections 监听配置文件变更并解析为map[string]map[string]string
 	WatchSections(ctx context.Context, callback func(map[string]map[string]string)) error

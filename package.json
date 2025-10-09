@@ -3,5 +3,8 @@
     "dev": "wails3 dev",
     "build": "wails3 build",
     "package": "wails3 package"
+  },
+  "dependencies": {
+    "@vitejs/plugin-vue-jsx": "^5.1.1"
   }
 }

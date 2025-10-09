@@ -126,6 +126,28 @@
     /* 阴影 */
     --shadow-default: ;
     --shadow-hover: ;
+
+    /* 色彩系统 */
+    --color-primary: #4361ee;
+    --color-primary-light: #4895ef;
+    --color-primary-dark: #3a0ca3;
+    --color-text: #2b2d42;
+    --color-text-secondary: #8d99ae;
+    --color-background: #f8f9fa;
+    --color-background-secondary: #edf2f4;
+    --color-background-tertiary: #e5e5e5;
+    --color-background-elevated: #ffffff;
+    --color-border: #d8d8d8;
+    --color-border-hover: #adb5bd;
+    --color-scrollbar-thumb: #cbd5e0;
+    --color-scrollbar-thumb-hover: #a0aec0;
+
+    /* 尺寸和间距 */
+    --border-radius: 8px;
+    --border-radius-sm: 4px;
+
+    /* 过渡效果 */
+    --transition: all 0.2s ease;
 }
 
 /* === 主题定义 === */

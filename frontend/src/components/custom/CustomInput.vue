@@ -7,9 +7,9 @@
         :min="props.min"
         :max="props.max"
         v-model="localValue"
-    ref="input"
-    :placeholder="props.placeholder"
-    :maxlength="props.length"
+        ref="input"
+        :placeholder="props.placeholder"
+        :maxlength="props.length"
     >
     <button class="btn" @click="back()">确定</button>
   </div>
@@ -71,46 +71,66 @@ watch(() => props.modelValue, (newVal) => {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-
   display: flex;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.component:focus-within {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary);
 }
 
 .input {
   width: 100%;
   height: 35px;
-
   margin: 0;
-  padding: 7px 5px 5px;
+  padding: 7px 12px;
   box-sizing: border-box;
   color: var(--color-text);
   background-color: var(--color-background-secondary);
   border: 1px solid var(--color-border);
-  border-radius: 5px 0 0 5px;
+  border-right: none;
+  border-radius: var(--border-radius) 0 0 var(--border-radius);
+  font-family: inherit;
+  font-size: 14px;
+  transition: var(--transition);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
 
 .input::placeholder {
   color: var(--color-text-secondary);
+  font-size: 13px;
 }
 
 .btn {
-  width: 45px;
+  width: 55px;
   height: 35px;
-  aspect-ratio: 1;
-
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   cursor: pointer;
   font-size: 13px;
-  color: var(--color-text);
-  background-color: var(--color-background-tertiary);
-  border: 1px solid var(--color-border);
-  border-radius: 0 5px 5px 0;
-  overflow: hidden;
+  font-weight: 500;
+  color: white;
+  background-color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  transition: var(--transition);
 }
 
 .btn:hover {
-  background-color: var(--color-background-elevated);
-  border: 1px solid var(--color-border);
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.btn:active {
+  transform: scale(0.98);
 }
 </style>

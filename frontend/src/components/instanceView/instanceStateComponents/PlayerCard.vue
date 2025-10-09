@@ -93,9 +93,9 @@ import {
 } from "birdpaper-icon";
 import IconToggle from "../../IconToggle.vue";
 import {onMounted, onUnmounted, ref} from "vue";
-import {Player} from "../../../stores/PlayerListStore";
+import {Player} from "../../../stores/server/PlayerListStore";
 import {formatOnlineTime} from "../../../utils/date";
-import {InstanceState} from "../../../stores/McServerInstanceStore";
+import {InstanceState} from "../../../stores/server/McServerInstanceStore";
 
 const props = defineProps<{
   player: Player;

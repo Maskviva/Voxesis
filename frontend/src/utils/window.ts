@@ -1,5 +1,5 @@
 import {Window} from "@wailsio/runtime";
-import {isWails} from "../stores/env";
+import {isWails} from "../stores/core/env";
 import {ref} from "vue";
 
 export const WinMaxSize = ref(false)

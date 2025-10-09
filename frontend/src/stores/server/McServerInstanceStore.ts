@@ -1,7 +1,7 @@
 // mcServerInstanceStore.ts
 
 import {defineStore} from 'pinia';
-import {McServerConfigManager, McServerManager, ServerConfig} from "../instance/McServerInstanceManager";
+import {McServerConfigManager, McServerManager, ServerConfig} from "../../instance/McServerInstanceManager";
 import {readonly, ref} from "vue";
 import {Events} from "@wailsio/runtime";
 

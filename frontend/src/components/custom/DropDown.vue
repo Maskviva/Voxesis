@@ -51,40 +51,48 @@ document.addEventListener('click', (e) => {
 
 <style scoped>
 .drop-down {
-  width: 160px;
-  height: 35px;
-  border-radius: 5px;
-  padding: 10px;
-  font-size: 13px;
+  width: 180px;
+  height: 40px;
+  border-radius: var(--border-radius);
+  padding: 0 12px;
+  font-size: 14px;
   background-color: var(--color-background-secondary);
   color: var(--color-text);
   border: 1px solid var(--color-border);
   box-sizing: border-box;
-
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-
+  justify-content: space-between;
   position: relative;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.drop-down:hover {
+  border-color: var(--color-border-hover);
+}
+
+.drop-down:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.15);
 }
 
 .drop {
-  width: 100%;
+  width: calc(100% - 20px);
   height: 100%;
+  display: flex;
+  align-items: center;
   white-space: nowrap;
-  transform: translateY(-3px);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .arrow {
+  width: 0;
+  height: 0;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-top: 5px solid currentColor;
-
-  position: absolute;
-  top: 40%;
-  right: 5px;
-
+  border-top: 5px solid var(--color-text-secondary);
   transition: transform 0.3s ease;
 }
 
@@ -93,69 +101,38 @@ document.addEventListener('click', (e) => {
 }
 
 .drop-down-list {
-  width: 190px;
-  height: 0;
-
+  width: 100%;
+  max-height: 0;
   color: var(--color-text);
-  background-color: var(--color-background-tertiary);
-  border-radius: 5px;
-  opacity: 0.6;
-
+  background-color: var(--color-background-elevated);
+  border-radius: var(--border-radius);
   overflow: hidden;
-  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.2);
-
-  display: flex;
-  flex-direction: column;
-
+  box-shadow: var(--shadow-md);
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
-
-  z-index: 99999;
-
-  transition: all 500ms;
-}
-
-.drop-down::before {
-  content: '';
-  position: absolute;
-  top: 35px;
-  left: 10px;
-
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-bottom: 8px solid var(--color-background-elevated);
-
-  opacity: 0;
-
-  z-index: 100000;
-
-  transition: opacity 0ms 380ms;
-}
-
-.drop-down:has(.drop-down-list.open)::before {
-  opacity: 1;
-  transition: opacity 0ms;
+  z-index: 1000;
+  transition: all 0.3s ease;
 }
 
 .drop-down-list.open {
-  height: 130px;
-  opacity: 1;
+  max-height: 200px;
   overflow-y: auto;
+  border: 1px solid var(--color-border);
 }
 
 .drop-down-list::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .drop-down-list::-webkit-scrollbar-track {
-  border-radius: 0 5px 5px 0;
-  border-bottom: 8px solid var(--color-background-tertiary);
+  background: var(--color-background-secondary);
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
 }
 
 .drop-down-list::-webkit-scrollbar-thumb {
   background-color: var(--color-scrollbar-thumb);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .drop-down-list::-webkit-scrollbar-thumb:hover {
@@ -165,12 +142,19 @@ document.addEventListener('click', (e) => {
 .item {
   width: 100%;
   height: 40px;
-  padding: 10px;
-  background-color: var(--color-background-tertiary);
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  background-color: var(--color-background-elevated);
   cursor: pointer;
+  transition: var(--transition);
 }
 
 .item:hover {
+  background-color: var(--color-background-secondary);
+}
+
+.item:active {
   background-color: var(--color-background-tertiary);
 }
 </style>

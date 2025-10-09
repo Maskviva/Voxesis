@@ -1,12 +1,12 @@
 import {defineStore} from "pinia";
 import {reactive, readonly, toRefs} from "vue";
 
-import Avatar1 from '../assets/images/Avatar1.avif';
-import Avatar2 from '../assets/images/Avatar2.avif';
-import Avatar3 from '../assets/images/Avatar3.avif';
-import Avatar4 from '../assets/images/Avatar4.avif';
-import Avatar5 from '../assets/images/Avatar5.avif';
-import Avatar6 from '../assets/images/Avatar6.avif';
+import Avatar1 from '../../assets/images/Avatar1.avif';
+import Avatar2 from '../../assets/images/Avatar2.avif';
+import Avatar3 from '../../assets/images/Avatar3.avif';
+import Avatar4 from '../../assets/images/Avatar4.avif';
+import Avatar5 from '../../assets/images/Avatar5.avif';
+import Avatar6 from '../../assets/images/Avatar6.avif';
 
 export const AVATAR_URLS = [
     Avatar1,

@@ -72,13 +72,13 @@ import CustomSwitch from "../components/custom/CustomSwitch.vue";
 import {ElMessage} from "element-plus"
 import {onMounted, Ref, ref, watch} from "vue";
 import {IconFileUploadFill, IconFileUploadLine, IconFolderOpenFill, IconFolderOpenLine} from "birdpaper-icon";
-import {type PluginSetting, type PluginSettingItem, usePluginListStore} from "../stores/PluginStore";
+import {type PluginSetting, type PluginSettingItem, usePluginListStore} from "../stores/plugin/PluginStore";
 import {Browser} from "@wailsio/runtime"
-import {useAppConfigStore} from "../stores/AppConfigStore";
+import {useAppConfigStore} from "../stores/core/AppConfigStore";
 
 const MOUNTED = ref<boolean>(false);
-const pluginListStore = usePluginListStore()
-const appConfigStore = useAppConfigStore()
+const pluginListStore = usePluginListStore();
+const appConfigStore = useAppConfigStore();
 
 function upDataTheme(theme: string) {
   if (!MOUNTED.value) return;
@@ -183,6 +183,7 @@ const plugins: Ref<PluginSetting[]> = ref([
   },
   {
     plate: "QQ机器人设置",
+    display: 'grid',
     items: [
       {
         label: "机器人开关",
@@ -244,7 +245,7 @@ const plugins: Ref<PluginSetting[]> = ref([
 ]);
 
 onMounted(() => {
-  pluginListStore.Load().then(() => {
+  pluginListStore.loadingPromise.then(() => {
     for (const key of pluginListStore.pluginList.keys()) {
       const plugin = pluginListStore.pluginList.get(key);
       const setting = plugin.settings;
@@ -256,20 +257,17 @@ onMounted(() => {
         if (!item.label || !item.type || !item.value || !item.key) return;
       }
 
-      // 修复问题代码
       let plateFound = false;
       for (let j = 0; j < plugins.value.length; j++) {
         const rawPlugin: PluginSetting = plugins.value[j];
 
         if (rawPlugin.plate == setting.plate) {
-          // 将items添加到rawPlugin.items数组中
           rawPlugin.items.push(...items as PluginSetting['items']);
           plateFound = true;
           break;
         }
       }
 
-      // 如果没有找到对应的plate，则添加新的设置板块
       if (!plateFound) {
         plugins.value.push({
           plate: setting.plate,

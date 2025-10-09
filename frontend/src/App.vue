@@ -23,11 +23,13 @@
   </header>
 
   <ul ref="viewListBox" class="sidebar">
-    <li v-for="item in VIEW_LIST" :key="item.name" class="item" @click="toggleView(item.name)">
-      <IconToggle :LineIcon="item.line_icon" :FillIcon="item.fill_icon" :Size="25"
-                  :Toggle="view_component?.name == item.name"></IconToggle>
-      <span class="sidebar-text">{{ item.introduce }}</span>
-    </li>
+    <template v-for="item in viewStore.views.values()" :key="item.name">
+      <li v-if="item.enable" class="item" @click="toggleView(item.name)">
+        <IconToggle :LineIcon="item.line_icon" :FillIcon="item.fill_icon" :Size="25"
+                    :Toggle="view_component?.name == item.name"></IconToggle>
+        <span class="sidebar-text">{{ item.introduce }}</span>
+      </li>
+    </template>
 
     <li ref="systemStateRef" class="system-state" :class="{ 'is-open': detailVisible }"
         @click="detailVisible = !detailVisible">
@@ -61,62 +63,33 @@
 </template>
 
 <script setup lang="ts">
-import {type Component, computed, markRaw, onMounted, onUnmounted, provide, Ref, ref, shallowRef} from 'vue';
+import {type Component, computed, onMounted, provide, ref, shallowRef} from 'vue';
 import {onClickOutside} from '@vueuse/core';
 
+import * as BirdpaperIcon from 'birdpaper-icon'
 import {
   IconCheckboxBlankLine,
   IconCheckboxMultipleBlankLine,
   IconCloseLargeLine,
   IconCpuLine,
-  IconDatabaseFill,
-  IconDatabaseLine,
   IconRamLine,
-  IconSettings4Fill,
-  IconSettings4Line,
   IconSubtractLine
-} from 'birdpaper-icon';
+} from 'birdpaper-icon'
 
 import IconToggle from "./components/IconToggle.vue";
 import HomeView from "./view/Home.vue";
-import SettingView from "./view/Setting.vue";
-import InstanceView from "./view/Instance.vue";
 import ProgressBar from "./components/ProgressBar.vue";
 
 import {vTopText} from "./utils/topText";
 import {vHover} from "./utils/hover";
 import {vRipple} from "./utils/waves";
-import {isWails} from "./stores/env";
+import {isWails} from "./stores/core/env";
 import {closeWin, WinMaxSize, winMinimize, winToggleMaximise} from "./utils/window";
-import {useSystemStateStore} from "./stores/SystemStateStore";
+import {useSystemStateStore} from "./stores/core/SystemStateStore";
 import {SystemState} from "../bindings/voxesis/src/Common/Entity";
-import {useAppConfigStore} from "./stores/AppConfigStore";
-import {usePluginListStore} from "./stores/PluginStore";
-
-interface ViewItem {
-  name: string;
-  component: Component;
-  introduce: string;
-  line_icon: Component;
-  fill_icon: Component;
-}
-
-const VIEW_LIST: Ref<ViewItem[]> = ref([
-  {
-    name: 'instance',
-    component: markRaw(InstanceView),
-    introduce: "实例",
-    line_icon: markRaw(IconDatabaseLine),
-    fill_icon: markRaw(IconDatabaseFill),
-  },
-  {
-    name: 'setting',
-    component: markRaw(SettingView),
-    introduce: "设置",
-    line_icon: markRaw(IconSettings4Line),
-    fill_icon: markRaw(IconSettings4Fill),
-  }
-]);
+import {useAppConfigStore} from "./stores/core/AppConfigStore";
+import {usePluginListStore} from "./stores/plugin/PluginStore";
+import {useViewStore, ViewItem} from "./stores/core/ViewStore";
 
 const view_component = shallowRef<ViewItem | null>(null);
 const sidebar_before_top = ref("-50vh");
@@ -126,6 +99,7 @@ const ResponsiveHeight = computed(() => !isWails.value ? "100vh" : "calc(100% - 
 
 // document.documentElement.setAttribute('data-theme', 'dark');
 
+const viewStore = useViewStore();
 const systemStateStore = useSystemStateStore();
 const appConfigStore = useAppConfigStore()
 const pluginListStore = usePluginListStore()
@@ -136,11 +110,11 @@ const systemStateRef = ref(null);
 onClickOutside(systemStateRef, () => (detailVisible.value = false));
 
 const toggleView = (viewName: string) => {
-  const targetView = VIEW_LIST.value.find(item => item.name === viewName);
+  const targetView = viewStore.views.get(viewName);
   if (!targetView) return;
 
   const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const index = VIEW_LIST.value.indexOf(targetView);
+  const index = [...viewStore.views.values()].indexOf(targetView);
   const itemHeight = 35 + rootFontSize * 0.75;
   const totalOffset = index * itemHeight + rootFontSize - 1;
 
@@ -148,50 +122,22 @@ const toggleView = (viewName: string) => {
   view_component.value = targetView;
 };
 
-const handleWheelScroll = (event: WheelEvent) => {
-  if (!view_component.value) return;
+onMounted(async () => {
+  await viewStore.LoadViews()
+  await pluginListStore.Load();
+  await appConfigStore.Load();
+  await systemStateStore.ListenState();
 
-  const isScrollingDown = event.deltaY > 0;
-  const currentIndex = VIEW_LIST.value.findIndex(component => component.name === view_component.value!.name);
-
-  if (isScrollingDown) {
-    if (currentIndex < VIEW_LIST.value.length - 1) {
-      toggleView(VIEW_LIST[currentIndex + 1].name);
-    }
-  } else {
-    if (currentIndex > 0) {
-      toggleView(VIEW_LIST[currentIndex - 1].name);
-    }
-  }
-};
-
-onMounted(() => {
-  systemStateStore.ListenState();
-  appConfigStore.Load();
-
-  pluginListStore.Load().then(() => {
-    for (const key of pluginListStore.pluginList.keys()) {
-      const plugin = pluginListStore.pluginList.get(key);
-
-      VIEW_LIST.value.push({
-        name: plugin.name,
-        component: markRaw(plugin.component),
-        introduce: plugin.introduce,
-        line_icon: markRaw(plugin.line_icon),
-        fill_icon: markRaw(plugin.fill_icon),
-      })
-    }
+  [...pluginListStore.pluginList.values()].forEach(plugin => {
+    viewStore.AddView({
+      name: plugin.name,
+      component: plugin.component,
+      enable: true,
+      introduce: plugin.introduce,
+      line_icon: (BirdpaperIcon as any)[plugin.line_icon],
+      fill_icon: (BirdpaperIcon as any)[plugin.fill_icon]
+    })
   })
-
-  if (viewListBox.value) {
-    viewListBox.value.addEventListener('wheel', handleWheelScroll);
-  }
-});
-
-onUnmounted(() => {
-  if (viewListBox.value) {
-    viewListBox.value.removeEventListener('wheel', handleWheelScroll);
-  }
 });
 
 provide('AppViewMethod', {

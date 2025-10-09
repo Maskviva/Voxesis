@@ -94,7 +94,7 @@ func (cm *ConfigManager) GetAllValue() (interface{}, error) {
 }
 
 // SetValueOfKey 设置指定键的值
-func (cm *ConfigManager) SetValueOfKey(section, key, value string) error {
+func (cm *ConfigManager) SetValueOfKey(section string, key string, value interface{}) error {
 	switch cm.configType {
 	case INI:
 		return cm.iniConfig.SetKey(section, key, value)

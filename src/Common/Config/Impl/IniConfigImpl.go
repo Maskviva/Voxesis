@@ -2,6 +2,7 @@ package v_config_impl
 
 import (
 	"context"
+	"fmt"
 	vconfig "voxesis/src/Common/Config"
 
 	"gopkg.in/ini.v1"
@@ -137,19 +138,27 @@ func (i *BaseIniImpl) GetKey(sectionName, keyName string) (string, error) {
 }
 
 // SetKey 设置INI配置中特定节的键值
-func (i *BaseIniImpl) SetKey(sectionName, keyName, value string) error {
+func (i *BaseIniImpl) SetKey(sectionName, keyName, value interface{}) error {
 	sections, err := i.GetSections()
 	if err != nil {
-		// 如果读取失败，创建一个新的sections map
 		sections = make(map[string]map[string]string)
 	}
 
-	// 确保节存在
-	if sections[sectionName] == nil {
-		sections[sectionName] = make(map[string]string)
+	sectionNameStr, ok := sectionName.(string)
+	if !ok {
+		return fmt.Errorf("sectionName must be a string")
 	}
 
-	sections[sectionName][keyName] = value
+	keyNameStr, ok := keyName.(string)
+	if !ok {
+		return fmt.Errorf("keyName must be a string")
+	}
+
+	if sections[sectionNameStr] == nil {
+		sections[sectionNameStr] = make(map[string]string)
+	}
+
+	sections[sectionNameStr][keyNameStr] = fmt.Sprintf("%v", value)
 	return i.SetSections(sections)
 }
 

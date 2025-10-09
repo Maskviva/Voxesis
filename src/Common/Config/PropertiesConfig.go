@@ -15,7 +15,7 @@ type BaseProperties interface {
 	GetProperty(key string) (string, error)
 
 	// SetProperty 设置Properties中的特定属性值
-	SetProperty(key, value string) error
+	SetProperty(key string, value interface{}) error
 
 	// HasProperty 检查是否存在指定的属性
 	HasProperty(key string) (bool, error)

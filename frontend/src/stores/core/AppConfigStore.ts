@@ -1,5 +1,5 @@
 import {defineStore} from "pinia";
-import {AppConfig} from "../instance/AppConfig";
+import {AppConfig} from "../../instance/AppConfig";
 import {readonly, ref, Ref} from "vue";
 
 export const useAppConfigStore = defineStore('appConfig', () => {

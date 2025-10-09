@@ -119,37 +119,44 @@ onMounted(() => {
 .component {
   width: v-bind(wight+ "px");
   height: v-bind(height+ "px");
-
   margin: 0;
-  padding: 5px;
+  padding: 10px;
   box-sizing: border-box;
   background-color: var(--color-background-secondary);
-
+  border-radius: var(--border-radius);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: var(--shadow-sm);
 }
 
 .line {
   width: v-bind(line_width+ "px");
   height: v-bind(line_height+ "px");
-
-  background-color: var(--color-text);
+  background-color: var(--color-border);
+  border-radius: 10px;
   position: relative;
+  transition: var(--transition);
 }
 
 .ball {
   width: v-bind(size+ "px");
   height: v-bind(size+ "px");
-
-  background-color: var(--color-text-secondary);
+  background-color: var(--color-primary);
   border-radius: 50%;
   cursor: grab;
-
   position: absolute;
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s ease;
+}
+
+.ball:hover {
+  transform: scale(1.1);
 }
 
 .ball:active {
   cursor: grabbing;
+  transform: scale(1.05);
+  box-shadow: var(--shadow-lg);
 }
 </style>

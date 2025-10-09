@@ -185,14 +185,18 @@ func (p *BasePropertiesImpl) GetProperty(key string) (string, error) {
 }
 
 // SetProperty 设置Properties中的特定属性值
-func (p *BasePropertiesImpl) SetProperty(key, value string) error {
+func (p *BasePropertiesImpl) SetProperty(key string, value interface{}) error {
 	props, err := p.GetProperties()
 	if err != nil {
 		// 如果读取失败，创建一个新的map
 		props = make(map[string]string)
 	}
 
-	props[key] = value
+	if _, ok := value.(string); !ok {
+		value = fmt.Sprintf("%v", value)
+	}
+
+	props[key] = value.(string)
 	return p.SetProperties(props)
 }
 

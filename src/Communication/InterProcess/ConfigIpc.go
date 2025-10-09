@@ -81,7 +81,7 @@ func (c *ConfigIpc) GetAllValue(uuid string) (interface{}, *string) {
 	}
 }
 
-func (c *ConfigIpc) SetValueOfKey(uuid string, key string, value string, section string) *string {
+func (c *ConfigIpc) SetValueOfKey(uuid string, key string, value interface{}, section string) *string {
 	ferr, configManager := findConfigManager(c, uuid)
 
 	if ferr != nil {
