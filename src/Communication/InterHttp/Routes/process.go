@@ -1,17 +1,19 @@
 package v_web_routes
 
 import (
+	vcommon "voxesis/src/Common"
 	vwebcontroller "voxesis/src/Communication/InterHttp/Controller"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Process(group *gin.RouterGroup) {
-	ctrl := &vwebcontroller.Process{}
+	vcommon.ProcessCtrl = &vwebcontroller.Process{}
 
-	group.POST("/NewProcess", ctrl.NewProcess)
-	group.POST("/Start", ctrl.Start)
-	group.POST("/Stop", ctrl.Stop)
-	group.POST("/SendCommand", ctrl.SendCommand)
-	group.POST("/GetProcessStatus", ctrl.GetProcessStatus)
+	group.POST("/NewProcess", vcommon.ProcessCtrl.NewProcess)
+	group.POST("/Start", vcommon.ProcessCtrl.Start)
+	group.POST("/Stop", vcommon.ProcessCtrl.Stop)
+	group.POST("/SendCommand", vcommon.ProcessCtrl.SendCommand)
+	group.POST("/GetProcessStatus", vcommon.ProcessCtrl.GetProcessStatus)
+	group.GET("/GetProcessOutput", vcommon.ProcessCtrl.GetProcessOutput)
 }

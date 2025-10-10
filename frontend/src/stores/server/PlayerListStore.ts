@@ -100,7 +100,7 @@ export const usePlayerListStore = defineStore('playerList', () => {
 
         for (const matcher of LOG_MATCHERS) {
             const match = matcher.regex.exec(cleanedLog);
-            console.log(serverId, match, state.servers, state.servers[serverId]);
+
             if (!match) continue;
 
             const [, playerName, uid] = match;

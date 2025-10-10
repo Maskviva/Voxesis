@@ -10,6 +10,7 @@ require (
 	github.com/gin-contrib/static v1.1.5
 	github.com/gin-gonic/gin v1.10.1
 	github.com/google/uuid v1.6.0
+	github.com/gorilla/websocket v1.5.3
 	github.com/shirou/gopsutil/v3 v3.20.10
 	github.com/spf13/viper v1.21.0
 	github.com/wailsapp/wails/v3 v3.0.0-alpha.7

@@ -3,7 +3,7 @@
 import {defineStore} from 'pinia';
 import {McServerConfigManager, McServerManager, ServerConfig} from "../../instance/McServerInstanceManager";
 import {readonly, ref} from "vue";
-import {Events} from "@wailsio/runtime";
+import {GetProcessOutput} from "../../api/process";
 
 export type OutputCallback = (output: { id: number, data: string[] }) => void;
 
@@ -32,11 +32,11 @@ export const useInstancesStore = defineStore('instance', () => {
     const findInstance = (id: number) => instances.value.find(inst => inst.instanceInfo.id === id);
 
     const setupOutputListener = (instance: InstanceState) => {
-        Events.On("process-" + instance.instanceInfo.id + "-output", (data) => {
+        GetProcessOutput(instance.instanceInfo.id, (data: string) => {
             const targetInstance = findInstance(instance.instanceInfo.id);
 
             if (targetInstance) {
-                targetInstance.processState.output.push(data.data);
+                targetInstance.processState.output.push(data);
                 if (targetInstance.processState.output.length > 1000) {
                     targetInstance.processState.output.shift();
                 }
@@ -45,10 +45,27 @@ export const useInstancesStore = defineStore('instance', () => {
             if (outputCallbacks.has(instance.instanceInfo.id)) {
                 outputCallbacks.get(instance.instanceInfo.id)?.forEach(cb => cb({
                     id: instance.instanceInfo.id,
-                    data: data.data
+                    data: Array.isArray(data) ? data : [data]
                 }));
             }
         })
+        // Events.On("process-" + instance.instanceInfo.id + "-output", (data) => {
+        //     const targetInstance = findInstance(instance.instanceInfo.id);
+        //
+        //     if (targetInstance) {
+        //         targetInstance.processState.output.push(data.data);
+        //         if (targetInstance.processState.output.length > 1000) {
+        //             targetInstance.processState.output.shift();
+        //         }
+        //     }
+        //
+        //     if (outputCallbacks.has(instance.instanceInfo.id)) {
+        //         outputCallbacks.get(instance.instanceInfo.id)?.forEach(cb => cb({
+        //             id: instance.instanceInfo.id,
+        //             data: data.data
+        //         }));
+        //     }
+        // })
     };
 
     function subscribeToOutput(instanceId: number, callback: OutputCallback) {
@@ -192,3 +209,9 @@ export const useInstancesStore = defineStore('instance', () => {
         updateInstanceStatus,
     };
 });
+
+const ws = new WebSocket("ws://localhost:8080/api/process/GetProcessOutput")
+ws.onmessage = (event) => {
+    console.log(event)
+    // callback(event.data)
+}

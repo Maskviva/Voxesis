@@ -70,6 +70,7 @@ func (p *ProcessIpc) Start(id int) *string {
 	}
 
 	err = proc.precessManager.Start(func(log string) {
+		vcommon.ProcessCtrl.WriteProcessOutput(id, log)
 		proc.logBuffer.Add(log)
 	})
 

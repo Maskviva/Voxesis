@@ -1,14 +1,17 @@
 package v_web_controller
 
 import (
+	"net/http"
 	vlogger "voxesis/src/Common/Logger"
 	vmanager "voxesis/src/Common/Manager"
 	communication "voxesis/src/Communication"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 type Process struct {
+	ws *websocket.Conn
 }
 
 func (p *Process) NewProcess(context *gin.Context) {
@@ -150,4 +153,46 @@ func (p *Process) GetProcessStatus(context *gin.Context) {
 	}
 
 	context.JSON(200, []interface{}{*state, nil})
+}
+
+func (p *Process) GetProcessOutput(context *gin.Context) {
+	upgrader := websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+
+	var err error
+	p.ws, err = upgrader.Upgrade(context.Writer, context.Request, nil)
+	if err != nil {
+		vlogger.AppLogger.Error(err.Error())
+		return
+	}
+
+	go func() {
+		defer p.ws.Close()
+		for {
+			if _, _, err := p.ws.ReadMessage(); err != nil {
+				p.ws = nil
+				return
+			}
+		}
+	}()
+}
+
+func (p *Process) WriteProcessOutput(uuid int, output string) {
+	if p.ws == nil {
+		return
+	}
+
+	message := map[string]interface{}{
+		"uuid": uuid,
+		"data": output,
+	}
+
+	if err := p.ws.WriteJSON(message); err != nil {
+		p.ws = nil
+	}
 }
