@@ -11,7 +11,7 @@ import (
 	"strings"
 	"voxesis/src/Common"
 	vlogger "voxesis/src/Common/Logger"
-	"voxesis/src/Communication/InterProcess"
+	communication "voxesis/src/Communication"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -28,18 +28,18 @@ func InitAPP(assets embed.FS) *application.App {
 	// 初始化日志管理器
 	initLoggerManager(appDir)
 
-	processIpc := InterProcess.InitProcessIpc()
+	communication.Init()
 
 	app := application.New(application.Options{
 		Name:        "voxesis",
 		Description: "Voxesis A Minecraft Server Manager",
 		Services: []application.Service{
-			application.NewService(&InterProcess.LoggerIpc{}),
-			application.NewService(&InterProcess.ConfigIpc{}),
-			application.NewService(&InterProcess.PluginIpc{}),
-			application.NewService(processIpc),
-			application.NewService(&InterProcess.UtilsIpc{}),
-			application.NewService(&InterProcess.SystemDialogIpc{}),
+			application.NewService(communication.ConfigIpc),
+			application.NewService(communication.LoggerIpc),
+			application.NewService(communication.PluginIpc),
+			application.NewService(communication.SystemDialogIpc),
+			application.NewService(communication.ProcessIpc),
+			application.NewService(communication.UtilsIpc),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),

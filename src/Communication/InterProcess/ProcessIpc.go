@@ -1,4 +1,4 @@
-package InterProcess
+package inter_process
 
 import (
 	"fmt"
@@ -18,49 +18,41 @@ type Process struct {
 }
 
 type ProcessIpc struct {
-	processMap map[int]Process
-	nextID     int
+	ProcessMap map[int]Process
+	NextID     int
 	mu         sync.RWMutex
-}
-
-// InitProcessIpc 创建一个新的 ProcessIpc 实例。
-func InitProcessIpc() *ProcessIpc {
-	return &ProcessIpc{
-		processMap: make(map[int]Process),
-		nextID:     1,
-	}
 }
 
 func (p *ProcessIpc) NewProcess(processType vmanager.ProcessType, abs bool, relPath string, args ...string) int {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	id := p.nextID
+	id := p.NextID
 
 	if !abs {
 		relPath = path.Join(vcommon.AppDir, relPath)
 	}
 
 	// 检查该路径是否已经存在
-	for id, manager := range p.processMap {
+	for id, manager := range p.ProcessMap {
 		if manager.precessManager.Path == relPath && manager.precessManager.ProcessType == processType {
 			return id
 		}
 	}
 
-	p.processMap[id] = Process{
+	p.ProcessMap[id] = Process{
 		logBuffer: vutils.NewRateLimitBuffer(10*time.Millisecond, func(data interface{}) {
 			vcommon.App.EmitEvent(fmt.Sprintf("process-%d-output", id), data)
 		}),
 		precessManager: vmanager.NewProcessManager(processType, relPath, args...),
 	}
-	p.nextID++
+	p.NextID++
 	return id
 }
 
 func (p *ProcessIpc) getProcess(id int) (Process, error) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
-	proc, ok := p.processMap[id]
+	proc, ok := p.ProcessMap[id]
 	if !ok {
 		return Process{}, fmt.Errorf("ID为 %d 的进程未找到", id)
 	}

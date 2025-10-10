@@ -1,4 +1,4 @@
-package InterProcess
+package inter_process
 
 import (
 	"fmt"
@@ -10,11 +10,11 @@ import (
 )
 
 type LoggerIpc struct {
-	uuidMap map[string]*vlogger.Logger
+	UuidMap map[string]*vlogger.Logger
 }
 
 func findLogger(l *LoggerIpc, uuid string) (*string, *vlogger.Logger) {
-	logger, ok := l.uuidMap[uuid]
+	logger, ok := l.UuidMap[uuid]
 	if !ok {
 		err := fmt.Sprintf("未找到uuid为 %s 的Logger实例", uuid)
 		return &err, nil
@@ -24,8 +24,8 @@ func findLogger(l *LoggerIpc, uuid string) (*string, *vlogger.Logger) {
 }
 
 func (l *LoggerIpc) NewLogger(logDir string, logFileName string, date bool) (*string, *string) {
-	if l.uuidMap == nil {
-		l.uuidMap = make(map[string]*vlogger.Logger)
+	if l.UuidMap == nil {
+		l.UuidMap = make(map[string]*vlogger.Logger)
 	}
 
 	logger, err := vlogger.NewLogger(path.Join(vcommon.AppDir, logDir), logFileName, date)
@@ -38,7 +38,7 @@ func (l *LoggerIpc) NewLogger(logDir string, logFileName string, date bool) (*st
 	u := uuid.New()
 	uuidStr := u.String()
 
-	l.uuidMap[uuidStr] = logger
+	l.UuidMap[uuidStr] = logger
 
 	return &uuidStr, nil
 }
@@ -56,7 +56,7 @@ func (l *LoggerIpc) CloseLogger(uuid string) *string {
 		return &err
 	}
 
-	delete(l.uuidMap, uuid)
+	delete(l.UuidMap, uuid)
 
 	return nil
 }

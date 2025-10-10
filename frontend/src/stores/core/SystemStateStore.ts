@@ -1,7 +1,7 @@
 import {defineStore} from "pinia";
-import {GetSystemState} from "../../../bindings/voxesis/src/Communication/InterProcess/utilsipc";
 import {SystemState} from "../../../bindings/voxesis/src/Common/Entity";
 import {reactive} from "vue";
+import {GetSystemState} from "../../api/utils";
 
 function listenSystemState(callback: (state: Promise<SystemState | null>) => void) {
     setInterval(() => {

@@ -1,4 +1,4 @@
-package InterProcess
+package inter_process
 
 import (
 	entity "voxesis/src/Common/Entity"
@@ -6,13 +6,13 @@ import (
 )
 
 type PluginIpc struct {
-	pluginManager *vmanager.PluginManager
+	PluginManager *vmanager.PluginManager
 }
 
 func (p *PluginIpc) LoadPlugins() *string {
-	p.pluginManager = vmanager.NewPluginManager()
+	p.PluginManager = vmanager.NewPluginManager()
 
-	if err := p.pluginManager.LoadPlugins(); err != nil {
+	if err := p.PluginManager.LoadPlugins(); err != nil {
 		e := err.Error()
 		return &e
 	}
@@ -23,7 +23,7 @@ func (p *PluginIpc) LoadPlugins() *string {
 func (p *PluginIpc) GetPluginList() *[]entity.Plugin {
 	var pluginList []entity.Plugin
 
-	for _, value := range p.pluginManager.Plugins {
+	for _, value := range p.PluginManager.Plugins {
 		pluginList = append(pluginList, value)
 	}
 

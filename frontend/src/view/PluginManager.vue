@@ -1,10 +1,10 @@
 <template>
   <div class="plugin-manager-container">
     <div class="plugin-manager-sidebar">
-      <div class="sidebar-header">
+      <div class="sidebar-header fade-in-down delay-1">
         <h2>已安装插件</h2>
       </div>
-      <ul class="plugin-list">
+      <ul class="plugin-list fade-in-down">
         <li
             class="plugin-item"
             :class="{ 'active': selectedPlugin?.name == 'global_settings' }"
@@ -29,16 +29,16 @@
 
     <div class="plugin-manager-content">
       <div class="plugin-details" v-if="selectedPlugin.name == 'global_settings'">
-        <h1 class="plugin-name">全局设置</h1>
-        <p class="plugin-intro">对原生Voxesis进行设置。</p>
+        <h1 class="plugin-name fade-in-down">全局设置</h1>
+        <p class="plugin-intro fade-in-down delay-1">对原生Voxesis进行设置。</p>
       </div>
-      <div v-else-if="selectedPlugin && selectedPlugin.name" class="plugin-details">
+      <div v-else-if="selectedPlugin && selectedPlugin.name" :key="selectedPlugin.name" class="plugin-details">
         <div class="plugin-details-header">
           <div class="plugin-details-title">
-            <a class="plugin-name" @click="appView.toggleView(selectedPlugin.name)">{{ selectedPlugin.name }}</a>
-            <p class="plugin-intro">{{ selectedPlugin.introduce }}</p>
+            <a class="plugin-name fade-in-down " @click="appView.toggleView(selectedPlugin.name)">{{ selectedPlugin.name }}</a>
+            <p class="plugin-intro  fade-in-down delay-1">{{ selectedPlugin.introduce }}</p>
           </div>
-          <div class="plugin-details-actions">
+          <div class="plugin-details-actions fade-in-down delay-2">
             <button :disabled="viewStore.views.get(selectedPlugin.name).enable"
                     @click="viewStore.views.get(selectedPlugin.name).enable = true">启用
             </button>
@@ -47,7 +47,11 @@
             </button>
           </div>
         </div>
-        <PluginSettingComp :settings="selectedPlugin.settings"/>
+        <PluginSettingComp
+            class="fade-in-up"
+            :key="selectedPlugin.name"
+            :settings="selectedPlugin.settings"
+        />
       </div>
       <div v-else class="empty-state">
         <IconArchive2Line size="48" class="empty-icon"/>
@@ -271,11 +275,34 @@ onMounted(() => {
   line-height: 1.4;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(var(--spacing-sm));
+.fade-in-down {
+  animation: fadeInDown 0.6s ease-out forwards;
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.delay-1 {
+  animation-delay: 0.2s;
+}
+
+.delay-2 {
+  animation-delay: 0.3s;
+}
+
+@keyframes fadeInDown {
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
+
+@keyframes fadeInUp {
   to {
     opacity: 1;
     transform: translateY(0);

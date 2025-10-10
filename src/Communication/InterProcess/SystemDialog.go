@@ -1,4 +1,4 @@
-package InterProcess
+package inter_process
 
 import (
 	"fmt"

@@ -1,10 +1,12 @@
 import * as Vue from "vue";
 import {defineAsyncComponent, markRaw, readonly, ref, toRef} from "vue";
 import {defineStore} from "pinia";
-import {GetPluginList, LoadPlugins} from "../../../bindings/voxesis/src/Communication/InterProcess/pluginipc";
 import {ElNotification} from "element-plus";
-import * as bindIngs from '../../../bindings/voxesis/src/Communication/InterProcess';
 import * as WailsRunTime from '@wailsio/runtime';
+import Plugins, {GetPluginList, LoadPlugins} from "../../api/plugins";
+import Utils from "../../api/utils";
+import Config from "../../api/config";
+import {Api} from "../../api";
 
 declare const System: any;
 declare global {
@@ -82,7 +84,7 @@ async function pluginLoader(path: string) {
     await new Promise<void>((resolve, reject) => {
         if (window.System) return resolve();
         const script = document.createElement('script');
-        script.src = 'src/assets/lib/system.js';
+        script.src = 'lib/system.js';
         script.onload = () => resolve();
         script.onerror = _ => reject(new Error('无法加载 SystemJS 库'));
         document.head.appendChild(script);
@@ -116,12 +118,11 @@ async function pluginLoader(path: string) {
     }
 
     const wailsIpcWithSubmodules = {
-        ...bindIngs,
-        default: bindIngs,
-        ConfigIpc: bindIngs.ConfigIpc,
-        PluginIpc: bindIngs.PluginIpc,
-        ProcessIpc: bindIngs.ProcessIpc,
-        UtilsIpc: bindIngs.UtilsIpc
+        default: Api,
+        ConfigIpc: Config,
+        PluginIpc: Plugins,
+        ProcessIpc: {},
+        UtilsIpc: Utils
     };
 
     System.set(vuePseudoURL, Vue);

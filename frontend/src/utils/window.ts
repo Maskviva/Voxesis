@@ -1,21 +1,21 @@
 import {Window} from "@wailsio/runtime";
-import {isWails} from "../stores/core/env";
 import {ref} from "vue";
+import {envIsWails} from "../api/common";
 
 export const WinMaxSize = ref(false)
 
 export function winMinimize() {
-    if (!isWails) return;
+    if (!envIsWails) return;
     Window.Minimise();
 }
 
 export function winToggleMaximise() {
-    if (!isWails) return;
+    if (!envIsWails) return;
     Window.ToggleMaximise()
 }
 
 export function closeWin() {
-    if (!isWails) return;
+    if (!envIsWails) return;
     Window.Hide();
 }
 

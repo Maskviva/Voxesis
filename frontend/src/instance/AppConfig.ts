@@ -1,11 +1,5 @@
-import {
-    DelValueOfKey,
-    GetAllValue,
-    GetValueOfKey,
-    NewConfigManager,
-    SetValueOfKey
-} from "../../bindings/voxesis/src/Communication/InterProcess/configipc"
 import {ConfigType} from "../../bindings/voxesis/src/Common/Manager";
+import {DelValueOfKey, GetAllValue, GetValueOfKey, NewConfigManager, SetValueOfKey} from "../api/config";
 
 export class AppConfig {
     private uuid: string;

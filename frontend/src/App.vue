@@ -1,5 +1,5 @@
 <template>
-  <header v-if="isWails" class="header" @dblclick="winToggleMaximise()">
+  <header v-if="envIsWails" class="header" @dblclick="winToggleMaximise()">
     <a v-top-text v-hover v-ripple class="header-btn" style="padding: 8px;"
        @click="view_component = null; sidebar_before_top = '-50vh'">
       <span style="display: flex; gap: 5px">
@@ -83,19 +83,19 @@ import ProgressBar from "./components/ProgressBar.vue";
 import {vTopText} from "./utils/topText";
 import {vHover} from "./utils/hover";
 import {vRipple} from "./utils/waves";
-import {isWails} from "./stores/core/env";
 import {closeWin, WinMaxSize, winMinimize, winToggleMaximise} from "./utils/window";
 import {useSystemStateStore} from "./stores/core/SystemStateStore";
 import {SystemState} from "../bindings/voxesis/src/Common/Entity";
 import {useAppConfigStore} from "./stores/core/AppConfigStore";
 import {usePluginListStore} from "./stores/plugin/PluginStore";
 import {useViewStore, ViewItem} from "./stores/core/ViewStore";
+import {envIsWails} from "./api/common";
 
 const view_component = shallowRef<ViewItem | null>(null);
 const sidebar_before_top = ref("-50vh");
 const viewListBox = ref<HTMLElement | null>(null);
 
-const ResponsiveHeight = computed(() => !isWails.value ? "100vh" : "calc(100% - 50px)");
+const ResponsiveHeight = computed(() => !envIsWails ? "100vh" : "calc(100% - 50px)");
 
 // document.documentElement.setAttribute('data-theme', 'dark');
 
@@ -123,7 +123,7 @@ const toggleView = (viewName: string) => {
 };
 
 onMounted(async () => {
-  await viewStore.LoadViews()
+  await viewStore.LoadViews();
   await pluginListStore.Load();
   await appConfigStore.Load();
   await systemStateStore.ListenState();

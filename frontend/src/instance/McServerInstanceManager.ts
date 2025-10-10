@@ -1,19 +1,8 @@
 // mcServerInstanceManager.ts
-import {
-    DelValueOfKey,
-    GetAllValue,
-    NewConfigManager,
-    SetValueOfKey
-} from "../../bindings/voxesis/src/Communication/InterProcess/configipc";
 import {ConfigType, ProcessType} from "../../bindings/voxesis/src/Common/Manager";
-import {
-    GetProcessStatus,
-    NewProcess,
-    SendCommand,
-    Start,
-    Stop
-} from "../../bindings/voxesis/src/Communication/InterProcess/processipc";
 import {ElMessage} from "element-plus";
+import {DelValueOfKey, GetAllValue, NewConfigManager, SetValueOfKey} from "../api/config";
+import {GetProcessStatus, NewProcess, SendCommand, Start, Stop} from "../api/process";
 
 export interface ServerConfig {
     id: number;

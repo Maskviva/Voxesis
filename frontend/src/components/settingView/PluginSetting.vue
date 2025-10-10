@@ -62,6 +62,7 @@ import {
   OpenFileDialog
 } from "../../../bindings/voxesis/src/Communication/InterProcess/systemdialogipc";
 import {useAppConfigStore} from "../../stores/core/AppConfigStore";
+import {envIsWails} from "../../api/common";
 
 const props = defineProps<{
   settings: PluginSetting;
@@ -122,6 +123,13 @@ function getDirectoryPath(fullPath: string): string {
 }
 
 async function openDirectory(path: string) {
+  if (!envIsWails) {
+    return ElMessage({
+      type: "warning",
+      message: "此功能浏览器环境不适用"
+    })
+  }
+
   if (path == "" || !path) {
     ElMessage.warning('未设置目录');
     return;
@@ -136,6 +144,13 @@ async function openDirectory(path: string) {
 }
 
 async function handleBrowse(item: PluginSettingItem) {
+  if (!envIsWails) {
+    return ElMessage({
+      type: "warning",
+      message: "此功能浏览器环境不适用"
+    })
+  }
+
   try {
     let path: string | null = null;
 

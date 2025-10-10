@@ -1,4 +1,4 @@
-package InterProcess
+package inter_process
 
 import (
 	entity "voxesis/src/Common/Entity"
@@ -7,10 +7,6 @@ import (
 )
 
 type UtilsIpc struct {
-}
-
-func (u *UtilsIpc) IsWails() bool {
-	return true
 }
 
 func (u *UtilsIpc) GetSystemState() *entity.SystemState {

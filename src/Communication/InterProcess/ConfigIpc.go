@@ -1,4 +1,4 @@
-package InterProcess
+package inter_process
 
 import (
 	"fmt"
@@ -10,11 +10,11 @@ import (
 )
 
 type ConfigIpc struct {
-	uuidMap map[string]*vmanager.ConfigManager
+	UuidMap map[string]*vmanager.ConfigManager
 }
 
 func findConfigManager(c *ConfigIpc, uuid string) (*string, *vmanager.ConfigManager) {
-	configManager, ok := c.uuidMap[uuid]
+	configManager, ok := c.UuidMap[uuid]
 	if !ok {
 		err := fmt.Sprintf("为找到 uuid为: %s 的 ConfigManager 对象", uuid)
 		return &err, nil
@@ -24,15 +24,15 @@ func findConfigManager(c *ConfigIpc, uuid string) (*string, *vmanager.ConfigMana
 }
 
 func (c *ConfigIpc) NewConfigManager(managerType vmanager.ConfigType, filePath string, abs bool) (*string, *string) {
-	if c.uuidMap == nil {
-		c.uuidMap = make(map[string]*vmanager.ConfigManager)
+	if c.UuidMap == nil {
+		c.UuidMap = make(map[string]*vmanager.ConfigManager)
 	}
 
 	if !abs {
 		filePath = path.Join(vcommon.AppDir, filePath)
 	}
 
-	for mUuid, manager := range c.uuidMap {
+	for mUuid, manager := range c.UuidMap {
 		if manager.Path == filePath {
 			return &mUuid, nil
 		}
@@ -46,7 +46,7 @@ func (c *ConfigIpc) NewConfigManager(managerType vmanager.ConfigType, filePath s
 
 	u := uuid.New()
 	uuidStr := u.String()
-	c.uuidMap[uuidStr] = manager
+	c.UuidMap[uuidStr] = manager
 
 	return &uuidStr, nil
 }

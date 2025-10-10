@@ -1,0 +1,1 @@
+export const envIsWails = (typeof window === 'undefined' || window.location.href.includes('wails'));
