@@ -45,9 +45,9 @@ func Init(assets embed.FS) {
 		authorized.GET("/assets/*filepath", vwebmiddlewares.AutoCookie(), func(c *gin.Context) {
 			c.FileFromFS(c.Request.URL.Path, http.FS(distFS))
 		})
-	}
 
-	App.Use(vwebmiddlewares.AutoCookie(), static.Serve("/plugins", static.LocalFile(path.Join(vcommon.AppDir, "plugins"), true)))
+		authorized.Use(static.Serve("/plugins", static.LocalFile(path.Join(vcommon.AppDir, "plugins"), true)))
+	}
 }
 
 func Run() error {
