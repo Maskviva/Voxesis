@@ -1,7 +1,7 @@
-package v_web_routes
+package v_web_api
 
 import (
-	vwebcontroller "voxesis/src/Communication/InterHttp/Controller"
+	vwebcontroller "voxesis/src/Communication/InterHttp"
 
 	"github.com/gin-gonic/gin"
 )

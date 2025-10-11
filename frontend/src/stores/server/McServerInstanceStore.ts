@@ -209,9 +209,3 @@ export const useInstancesStore = defineStore('instance', () => {
         updateInstanceStatus,
     };
 });
-
-const ws = new WebSocket("ws://localhost:8080/api/process/GetProcessOutput")
-ws.onmessage = (event) => {
-    console.log(event)
-    // callback(event.data)
-}

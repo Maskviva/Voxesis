@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@vitejs/plugin-vue-jsx": "^5.1.1",
-    "@wailsio/runtime": "^3.0.0-alpha.66",
+    "@wailsio/runtime": "^3.0.0-alpha.72",
     "ansi_up": "^6.0.6",
     "birdpaper-icon": "^0.9.0",
     "codemirror": "^6.0.2",

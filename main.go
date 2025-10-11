@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"voxesis/src"
-	vweb "voxesis/src/Communication/InterHttp"
 	vtray "voxesis/src/System/Tray"
+	vweb "voxesis/src/Web"
 	vwindow "voxesis/src/Window"
 
 	"github.com/wailsapp/wails/v3/pkg/application"

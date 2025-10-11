@@ -1,7 +1,7 @@
 import * as Processipc from "../../bindings/voxesis/src/Communication/InterProcess/processipc"
 import {envIsWails} from "./common";
 import {ProcessType} from "../../bindings/voxesis/src/Common/Manager";
-import {Events} from "@wailsio/runtime";
+import { Events } from "@wailsio/runtime";
 
 export async function GetProcessStatus(uuid: number) {
     if (envIsWails) {
@@ -93,8 +93,8 @@ export async function Stop(uuid: number) {
 export async function GetProcessOutput(uuid: number, callback: (data: string) => void) {
     if (envIsWails) {
         Events.On("process-" + uuid + "-output", (data) => {
-            callback(data.data)
-        })
+            callback(data.data);
+        });
     } else {
         const ws = new WebSocket("ws://localhost:8080/api/process/GetProcessOutput")
         ws.onmessage = (event) => {

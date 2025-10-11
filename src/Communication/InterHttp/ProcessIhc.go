@@ -1,4 +1,4 @@
-package v_web_controller
+package inter_http
 
 import (
 	"net/http"

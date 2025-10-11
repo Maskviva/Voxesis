@@ -6,7 +6,7 @@
             src="../assets/images/logo_no_background.png"
             alt="Voxesis Logo"
             class="app-logo"
-            @click="Browser.OpenURL('https://gitee.com/Maskviva/voxesis')"
+            @click="openGit()"
         />
       </div>
 
@@ -33,17 +33,24 @@
         </button>
       </div>
     </div>
-
-
   </div>
 </template>
 
 <script setup lang="ts">
 import {inject, onMounted, onUnmounted, ref} from 'vue';
+import {envIsWails} from "../api/common";
 import {Browser} from "@wailsio/runtime";
 
 const AppViewMethod: { toggle_view: (view: string) => void } | undefined = inject('AppViewMethod')
 const isVisible = ref(false);
+
+function openGit() {
+  if (envIsWails) {
+    Browser.OpenURL('https://gitee.com/Maskviva/voxesis')
+  } else {
+    window.open('https://gitee.com/Maskviva/voxesis')
+  }
+}
 
 onMounted(() => {
   const timeout = setTimeout(() => {

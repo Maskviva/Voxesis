@@ -1,4 +1,4 @@
-package inter_http
+package v_web
 
 import (
 	"embed"
@@ -10,13 +10,18 @@ import (
 	"path"
 	vcommon "voxesis/src/Common"
 	vlogger "voxesis/src/Common/Logger"
-	vwebroutes "voxesis/src/Communication/InterHttp/Routes"
+	vwebmiddlewares "voxesis/src/Web/Middlewares"
+	vwebroutes "voxesis/src/Web/Routes"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 )
 
-var App = gin.Default()
+var (
+	//go:embed Resources/Public
+	publicFS embed.FS
+	App      = gin.Default()
+)
 
 func Init(assets embed.FS) {
 	distFS, err := fs.Sub(assets, "frontend/dist")
@@ -24,15 +29,25 @@ func Init(assets embed.FS) {
 		panic(err)
 	}
 
-	vwebroutes.ApiRoutes(App)
+	vwebroutes.AuthRoutes(App)
 
-	App.StaticFS("/view", http.FS(distFS))
-
-	App.Use(static.Serve("/plugins", static.LocalFile(path.Join(vcommon.AppDir, "plugins"), true)))
-
-	App.GET("/assets/*filepath", func(c *gin.Context) {
-		c.FileFromFS(c.Request.URL.Path, http.FS(distFS))
+	App.GET("/login", func(c *gin.Context) {
+		c.FileFromFS("Resources/Public/login.html", http.FS(publicFS))
 	})
+
+	authorized := App.Group("/")
+	authorized.Use(vwebmiddlewares.AutoCookie())
+	{
+		vwebroutes.ApiRoutes(authorized)
+
+		authorized.StaticFS("/dashboard", http.FS(distFS))
+
+		authorized.GET("/assets/*filepath", vwebmiddlewares.AutoCookie(), func(c *gin.Context) {
+			c.FileFromFS(c.Request.URL.Path, http.FS(distFS))
+		})
+
+		authorized.Use(static.Serve("/plugins", static.LocalFile(path.Join(vcommon.AppDir, "plugins"), true)))
+	}
 }
 
 func Run() error {
