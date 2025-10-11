@@ -20,7 +20,9 @@ func GetAuthConfig() (*AuthConfigData, error) {
 
 	file, err := os.ReadFile(configPath)
 	if err != nil {
-		return nil, err
+		if err := createAuthConfig(); err != nil {
+			return nil, err
+		}
 	}
 
 	var config AuthConfigData
@@ -30,4 +32,31 @@ func GetAuthConfig() (*AuthConfigData, error) {
 	}
 
 	return &config, nil
+}
+
+func createAuthConfig() error {
+	configPath := path.Join(vcommon.AppDir, "config", "auth.json")
+
+	if err := os.MkdirAll(path.Dir(configPath), 0755); err != nil {
+		return err
+	}
+
+	defaultConfig := AuthConfigData{
+		Username: "admin",
+		Password: "123456",
+		Secure:   false,
+		Deadline: 86400,
+		Token:    "a4fq-23qe-df15-6wf1-s12a-fa8s",
+	}
+
+	data, err := json.MarshalIndent(defaultConfig, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	if err := os.WriteFile(configPath, data, 0644); err != nil {
+		return err
+	}
+
+	return nil
 }
