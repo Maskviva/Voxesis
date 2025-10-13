@@ -1,0 +1,65 @@
+[data-theme="demo"],
+:root {
+    --color-background: #ffff2f;
+    --color-background-secondary: #f4f4f6;
+    --color-background-tertiary: #e527eb;
+    --color-background-elevated: #fff5ff;
+    --color-background-overlay: rgba(0, 52, 0, 0.5);
+
+    --color-text: #1118f7;
+    --color-text-secondary: #4a5563;
+    --color-text-tertiary: #6bd280;
+    --color-text-inverse: #fffcff;
+
+    --color-border: #000;
+    --color-border-secondary: #e5e7e0;
+
+    --color-primary: #420883;
+    --color-primary-hover: #303;
+    --color-primary-active: #2a0c61;
+    --color-primary-disabled: #a08c1;
+
+    --color-success: #22c0e;
+    --color-warning: #f5900b;
+    --color-error: #e044;
+
+    --color-focus-ring: rgba(66, 184, 0, 0.5);
+    --color-scrollbar-thumb: #d1d0db;
+    --color-scrollbar-thumb-hover: #9c0af;
+
+    --shadow-default: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="demo2"],
+:root {
+    --color-background: #0fffff;
+    --color-background-secondary: #03f4f6;
+    --color-background-tertiary: #e0e7eb;
+    --color-background-elevated: #f0ffff;
+    --color-background-overlay: rgba(0, 0, 0, 1);
+
+    --color-text: #111807;
+    --color-text-secondary: #4b0563;
+    --color-text-tertiary: #6b7080;
+    --color-text-inverse: #fff0ff;
+
+    --color-border: #d1d50b;
+    --color-border-secondary: #e0e7eb;
+
+    --color-primary: #42b083;
+    --color-primary-hover: #340773;
+    --color-primary-active: #2a0c61;
+    --color-primary-disabled: #08d8c1;
+
+    --color-success: #22c05e;
+    --color-warning: #f50e0b;
+    --color-error: #ef4044;
+
+    --color-focus-ring: rgba(66, 104, 131, 0.5);
+    --color-scrollbar-thumb: #d1d0db;
+    --color-scrollbar-thumb-hover: #90a3af;
+
+    --shadow-default: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}

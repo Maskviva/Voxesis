@@ -86,19 +86,19 @@ import {closeWin, WinMaxSize, winMinimize, winToggleMaximise} from "./utils/wind
 import {useSystemStateStore} from "./stores/core/SystemStateStore";
 import {SystemState} from "../bindings/voxesis/src/Common/Entity";
 import {useAppConfigStore} from "./stores/core/AppConfigStore";
-import {PluginItem, usePluginListStore} from "./stores/plugin/PluginStore";
+import {ThemePluginItem, usePluginListStore, ViewPluginItem} from "./stores/plugin/PluginStore";
 import {useViewStore} from "./stores/core/ViewStore";
 import {envIsWails} from "./api/common";
+import {useThemeStore} from "./stores/core/ThemeStore";
 
-const view_component = shallowRef<PluginItem | null>(null);
+const view_component = shallowRef<ViewPluginItem | null>(null);
 const sidebar_before_top = ref("-50vh");
 const viewListBox = ref<HTMLElement | null>(null);
 
 const ResponsiveHeight = computed(() => !envIsWails ? "100vh" : "calc(100% - 50px)");
 
-// document.documentElement.setAttribute('data-theme', 'dark');
-
 const viewStore = useViewStore();
+const themeStore = useThemeStore();
 const systemStateStore = useSystemStateStore();
 const appConfigStore = useAppConfigStore()
 const pluginListStore = usePluginListStore()
@@ -118,19 +118,42 @@ const toggleView = (viewName: string) => {
   const totalOffset = index * itemHeight + rootFontSize - 1;
 
   sidebar_before_top.value = totalOffset + "px";
-  
+
   view_component.value = targetView;
 };
 
 onMounted(async () => {
-  await viewStore.LoadViews();
+  await viewStore.Load();
   await pluginListStore.Load();
   await appConfigStore.Load();
+  await themeStore.Load(appConfigStore);
   await systemStateStore.ListenState();
 
-  [...pluginListStore.pluginList.values()].forEach(plugin => {
-    viewStore.AddView(plugin)
-  })
+  // 加载视图插件到 useViewStore
+  [...pluginListStore.viewPluginList.values()].forEach(plugin => {
+    viewStore.AddView(plugin);
+  });
+
+  // 加载主题插件到 useThemeStore
+  [...pluginListStore.themePluginList.values()].forEach((plugin: ThemePluginItem) => {
+    let variableCache: { [key: string]: string }[] = []
+
+    plugin.Object.themes.forEach(theme => {
+      variableCache = []
+      plugin.Object.variables.forEach(variable => {
+        if (variable.theme != theme) return;
+        variableCache.push(variable.value);
+      })
+
+      if (variableCache.length == 0) return;
+
+      themeStore.AddTheme({
+        name: theme,
+        type: 'custom',
+        variables: variableCache,
+      });
+    })
+  });
 });
 
 provide('AppViewMethod', {

@@ -35,6 +35,10 @@ func Init(assets embed.FS) {
 		c.FileFromFS("Resources/Public/login.html", http.FS(publicFS))
 	})
 
+	App.GET("/login/logo_no_background.png", func(c *gin.Context) {
+		c.FileFromFS("Resources/Public/logo_no_background.png", http.FS(publicFS))
+	})
+
 	App.Use(vwebmiddlewares.AutoCookie(), static.Serve("/plugins", static.LocalFile(path.Join(vcommon.AppDir, "plugins"), true)))
 
 	authorized := App.Group("/")

@@ -1,0 +1,11 @@
+{
+  "name": "MyTheme",
+  "main": "theme.css",
+  "introduce": "我的主题",
+  "plugin_type": "theme",
+  "version": "v0.0.1",
+  "author": "MyName",
+  "repository": "https://114514hub.com/114514",
+
+  "themes": ["demo", "demo2"]
+}

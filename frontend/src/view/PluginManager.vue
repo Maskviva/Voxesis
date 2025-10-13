@@ -7,8 +7,8 @@
       <ul class="plugin-list fade-in-down">
         <li
             class="plugin-item"
-            :class="{ 'active': selectedPlugin?.name == 'global_settings' }"
-            @click="selectedPlugin = {name: 'global_settings'} as PluginItem">
+            :class="{ 'active': selectedPlugin?.name === 'global_settings' }"
+            @click="selectedPlugin = {name: 'global_settings'} as ViewPluginItem">
           全局设置
         </li>
 
@@ -31,6 +31,12 @@
       <div class="plugin-details" v-if="selectedPlugin.name == 'global_settings'">
         <h1 class="plugin-name fade-in-down">全局设置</h1>
         <p class="plugin-intro fade-in-down delay-1">对原生Voxesis进行设置。</p>
+
+        <div>
+          <p>主题</p>
+          <DropDown v-model:value="theme" :list="themeList"></DropDown>
+        </div>
+
       </div>
       <div v-else-if="selectedPlugin && selectedPlugin.name" :key="selectedPlugin.name" class="plugin-details">
         <div class="plugin-details-header">
@@ -62,24 +68,43 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ComputedRef, inject, onMounted, ref} from 'vue';
-import {PluginItem, usePluginListStore} from "../stores/plugin/PluginStore";
+import {computed, ComputedRef, inject, onMounted, ref, watch} from 'vue';
+import {usePluginListStore, type ViewPluginItem} from "../stores/plugin/PluginStore";
 import {IconArchive2Line} from "birdpaper-icon";
 import PluginSettingComp from '../components/settingView/PluginSetting.vue';
 import {useViewStore} from "../stores/core/ViewStore";
 import {ViewPluginObject} from "../stores/plugin/ViewPlugin";
+import DropDown from "../components/custom/DropDown.vue";
+import {useThemeStore} from "../stores/core/ThemeStore";
 
 const appView = inject<{ toggleView: (name: string) => void }>('AppViewMethod');
 const viewStore = useViewStore();
 
 const pluginListStore = usePluginListStore();
-const pluginList: ComputedRef<PluginItem[]> = computed(() => Array.from(pluginListStore.pluginList.values()));
-const selectedPlugin = ref<PluginItem>({
+const themeStore = useThemeStore();
+const pluginList: ComputedRef<ViewPluginItem[]> = computed(() => Array.from(pluginListStore.viewPluginList.values()));
+const selectedPlugin = ref<ViewPluginItem>({
   name: '',
   type: 'view',
   enable: true,
   Object: {} as ViewPluginObject
 });
+
+const theme = ref()
+
+const themeList: {
+  label: string;
+  value: string | number | boolean;
+}[] = Array.from(themeStore.Themes).map(([_, value]) => {
+  return {
+    label: value.name,
+    value: value.name
+  }
+})
+
+watch(theme, () => {
+  themeStore.ToggleTheme(theme.value)
+})
 
 onMounted(() => {
   if (pluginList.value.length > 0) {

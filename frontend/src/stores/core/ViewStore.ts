@@ -1,13 +1,13 @@
 import {defineStore} from "pinia";
-import {Component, markRaw, Ref, ref, toRef} from "vue";
+import {markRaw, Ref, ref, toRef} from "vue";
 import InstanceView from "../../view/Instance.vue";
 import {IconArchive2Fill, IconArchive2Line, IconDatabaseFill, IconDatabaseLine} from "birdpaper-icon";
 import PluginManagerView from "../../view/PluginManager.vue";
-import {PluginItem} from "../plugin/PluginStore";
+import {ViewPluginItem} from "../plugin/PluginStore";
 import {ViewPluginObject} from "../plugin/ViewPlugin";
 
 
-const defaultViews: PluginItem[] = [
+const defaultViews: ViewPluginItem[] = [
     {
         name: 'instance',
         type: 'view',
@@ -35,25 +35,21 @@ const defaultViews: PluginItem[] = [
 ]
 
 export const useViewStore = defineStore('view', () => {
-    const views: Ref<Map<string, PluginItem>> = ref(new Map<string, PluginItem>())
+    const views: Ref<Map<string, ViewPluginItem>> = ref(new Map<string, ViewPluginItem>())
 
-    async function LoadViews() {
+    async function Load() {
         defaultViews.map(view => {
             views.value.set(view.name, view)
         })
     }
 
-    async function AddView(view: PluginItem) {
-        if (view.Object.component) {
-            views.value.set(view.name, view)
-        } else {
-            throw new Error('Component is undefined or null for view:' + view.name);
-        }
+    async function AddView(view: ViewPluginItem) {
+        views.value.set(view.name, view)
     }
 
     return {
         views: toRef(views),
-        LoadViews,
+        Load,
         AddView
     }
 })
