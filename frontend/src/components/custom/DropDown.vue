@@ -2,7 +2,7 @@
   <div ref="dropDown" class="drop-down" @click="openDropDown()">
     <span class="drop">{{ selectedLabel || (props.placeholder || '请选择') }}</span>
     <div ref="dropDownList" class="drop-down-list">
-            <span class="item" v-for="item in props.list" :key="String(item.value)" @click="selectItem(item)">{{
+            <span class="item" v-for="item in props.list" :key="item.value" @click="selectItem(item)">{{
                 item.label
               }}</span>
     </div>
@@ -15,12 +15,12 @@ import {computed, ref} from 'vue';
 
 const props = defineProps<{
   value?: string;
-  list: { label: string; value: string | number | boolean }[];
+  list: { label: string; value: string }[];
   placeholder?: string;
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:value', value: string | number | boolean): void;
+  (e: 'update:value', value: string): void;
 }>();
 
 const arrow = ref<HTMLElement | null>(null);
@@ -37,7 +37,7 @@ const openDropDown = () => {
   else dropDownList.value?.classList.add('open');
 };
 
-const selectItem = (item: { label: string; value: string | number | boolean }) => {
+const selectItem = (item: { label: string; value: string }) => {
   emit('update:value', item.value);
   dropDownList.value?.classList.remove('open');
 };

@@ -8,15 +8,15 @@
         <label class="setting-label">{{ item.label }}</label>
         <div class="setting-control">
 
-          <DropDown v-if="item.type == 'drop_down'" v-model:value="item.value as string | undefined" :list="item.list"
+          <DropDown v-if="item.type == 'drop_down'" v-model:value="item.value as string | undefined" :list="item.list!"
                     :placeholder="item.placeholder"/>
 
           <CustomSwitch v-if="item.type == 'switch'" v-model="item.value as boolean"/>
 
           <CustomInput v-if="item.type == 'input'"
                        v-model="item.value as string | number"
-                       :max="item.value_type === 'number' ? item.max : undefined"
-                       :min="item.value_type === 'number' ? item.min : undefined"
+                       :max="item.max"
+                       :min="item.min"
                        :placeholder="item.placeholder"
                        :type="item.value_type as 'number' | 'text' | 'password'"
           />
@@ -48,6 +48,7 @@
 </template>
 
 <script lang="ts" setup>
+import {type PluginSetting, type PluginSettingItem} from "../../stores/plugin/PluginStore";
 import {IconFileUploadLine, IconFolderOpenLine} from "birdpaper-icon";
 import CustomSwitch from "../custom/CustomSwitch.vue";
 import CustomInput from "../custom/CustomInput.vue";
@@ -62,7 +63,6 @@ import {
 } from "../../../bindings/voxesis/src/Communication/InterProcess/systemdialogipc";
 import {useAppConfigStore} from "../../stores/core/AppConfigStore";
 import {envIsWails} from "../../api/common";
-import {PluginSetting, PluginSettingItem} from "../../stores/plugin/ViewPlugin";
 
 const props = defineProps<{
   settings: PluginSetting;
@@ -168,7 +168,7 @@ async function handleBrowse(item: PluginSettingItem) {
         }
       }
     } else if (item.type === "select_file") {
-      path = await OpenFileDialog(item.title!, item.filters.displayName, item.filters.pattern);
+      path = await OpenFileDialog(item.title!, item.filters!.displayName, item.filters!.pattern);
       if (!path) {
         ElMessage.warning('操作取消');
         return;

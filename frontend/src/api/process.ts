@@ -1,12 +1,11 @@
-import * as ProcessIpc from "../../bindings/voxesis/src/Communication/InterProcess/processipc"
+import * as Processipc from "../../bindings/voxesis/src/Communication/InterProcess/processipc"
 import {envIsWails} from "./common";
 import {ProcessType} from "../../bindings/voxesis/src/Common/Manager";
 import { Events } from "@wailsio/runtime";
-import {ProcessState} from "../../bindings/voxesis/src/Common/Entity";
 
-export async function GetProcessStatus(uuid: number): Promise<[ProcessState | null, string | null]> {
+export async function GetProcessStatus(uuid: number) {
     if (envIsWails) {
-        return ProcessIpc.GetProcessStatus(uuid)
+        return Processipc.GetProcessStatus(uuid)
     } else {
         const res = await fetch("/api/process/GetProcessStatus", {
             method: "POST",
@@ -22,9 +21,9 @@ export async function GetProcessStatus(uuid: number): Promise<[ProcessState | nu
     }
 }
 
-export async function NewProcess(processType: ProcessType, abs: boolean, relPath: string, ...args: string[]): Promise<number> {
+export async function NewProcess(processType: ProcessType, abs: boolean, relPath: string, ...args: string[]) {
     if (envIsWails) {
-        return ProcessIpc.NewProcess(processType, abs, relPath, ...args)
+        return Processipc.NewProcess(processType, abs, relPath, ...args)
     } else {
         const res = await fetch("/api/process/NewProcess", {
             method: "POST",
@@ -43,9 +42,9 @@ export async function NewProcess(processType: ProcessType, abs: boolean, relPath
     }
 }
 
-export async function SendCommand(uuid: number, command: string): Promise<string | null> {
+export async function SendCommand(uuid: number, command: string) {
     if (envIsWails) {
-        return ProcessIpc.SendCommand(uuid, command)
+        return Processipc.SendCommand(uuid, command)
     } else {
         const res = await fetch("/api/process/SendCommand", {
             method: "POST",
@@ -59,9 +58,9 @@ export async function SendCommand(uuid: number, command: string): Promise<string
     }
 }
 
-export async function Start(uuid: number): Promise<string | null> {
+export async function Start(uuid: number) {
     if (envIsWails) {
-        return ProcessIpc.Start(uuid)
+        return Processipc.Start(uuid)
     } else {
         const res = await fetch("/api/process/Start", {
             method: "POST",
@@ -75,9 +74,9 @@ export async function Start(uuid: number): Promise<string | null> {
     }
 }
 
-export async function Stop(uuid: number): Promise<string | null> {
+export async function Stop(uuid: number) {
     if (envIsWails) {
-        return ProcessIpc.Stop(uuid)
+        return Processipc.Stop(uuid)
     } else {
         const res = await fetch("/api/process/Stop", {
             method: "POST",
@@ -91,7 +90,7 @@ export async function Stop(uuid: number): Promise<string | null> {
     }
 }
 
-export async function GetProcessOutput(uuid: number, callback: (data: string) => void): Promise<void> {
+export async function GetProcessOutput(uuid: number, callback: (data: string) => void) {
     if (envIsWails) {
         Events.On("process-" + uuid + "-output", (data) => {
             callback(data.data);

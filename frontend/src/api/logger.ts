@@ -1,7 +1,7 @@
 import * as Logger from '../../bindings/voxesis/src/Communication/InterProcess/loggeripc'
 import {envIsWails} from "./common";
 
-export async function CloseLogger(uuid: string): Promise<string | null> {
+export async function CloseLogger(uuid: string) {
     if (envIsWails) {
         return Logger.CloseLogger(uuid)
     } else {
@@ -19,7 +19,7 @@ export async function CloseLogger(uuid: string): Promise<string | null> {
     }
 }
 
-export async function LogDebug(uuid: string, logLine: string): Promise<string | null> {
+export async function LogDebug(uuid: string, logLine: string) {
     if (envIsWails) {
         return Logger.LogDebug(uuid, logLine)
     } else {
@@ -35,7 +35,7 @@ export async function LogDebug(uuid: string, logLine: string): Promise<string | 
     }
 }
 
-export async function LogError(uuid: string, logLine: string): Promise<string | null> {
+export async function LogError(uuid: string, logLine: string) {
     if (envIsWails) {
         return Logger.LogError(uuid, logLine)
     } else {
@@ -51,7 +51,7 @@ export async function LogError(uuid: string, logLine: string): Promise<string | 
     }
 }
 
-export async function LogInfo(uuid: string, logLine: string): Promise<string | null> {
+export async function LogInfo(uuid: string, logLine: string) {
     if (envIsWails) {
         return Logger.LogInfo(uuid, logLine)
     } else {
@@ -67,7 +67,7 @@ export async function LogInfo(uuid: string, logLine: string): Promise<string | n
     }
 }
 
-export async function LogWarn(uuid: string, logLine: string): Promise<string | null> {
+export async function LogWarn(uuid: string, logLine: string) {
     if (envIsWails) {
         return Logger.LogWarn(uuid, logLine)
     } else {
@@ -83,8 +83,8 @@ export async function LogWarn(uuid: string, logLine: string): Promise<string | n
     }
 }
 
-export async function NewLogger(logDir: string, logFileName: string, date: boolean): Promise<[string | null, string | null]> {
-    if (envIsWails) {
+export async function NewLogger(logDir: string, logFileName: string, date: boolean,) {
+    if (await envIsWails) {
         return Logger.NewLogger(logDir, logFileName, date)
     } else {
         const res = await fetch(`/api/logger/NewLogger}`, {

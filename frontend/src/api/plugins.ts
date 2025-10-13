@@ -1,10 +1,9 @@
-import * as PluginsIpc from '../../bindings/voxesis/src/Communication/InterProcess/pluginipc'
+import * as Plugins from '../../bindings/voxesis/src/Communication/InterProcess/pluginipc'
 import {envIsWails} from "./common";
-import {Plugin} from "../../bindings/voxesis/src/Common/Entity"
 
-export async function GetPluginList(): Promise<Plugin[] | null> {
+export async function GetPluginList() {
     if (envIsWails) {
-        return PluginsIpc.GetPluginList()
+        return Plugins.GetPluginList()
     } else {
         const res = await fetch("/api/plugins/GetPluginList", {
             method: "GET",
@@ -17,9 +16,9 @@ export async function GetPluginList(): Promise<Plugin[] | null> {
     }
 }
 
-export async function LoadPlugins(): Promise<string | null> {
+export async function LoadPlugins() {
     if (envIsWails) {
-        return PluginsIpc.LoadPlugins()
+        return Plugins.LoadPlugins()
     } else {
         const res = await fetch("/api/plugins/LoadPlugins", {
             method: "POST",
