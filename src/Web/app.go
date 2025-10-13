@@ -35,6 +35,8 @@ func Init(assets embed.FS) {
 		c.FileFromFS("Resources/Public/login.html", http.FS(publicFS))
 	})
 
+	App.Use(vwebmiddlewares.AutoCookie(), static.Serve("/plugins", static.LocalFile(path.Join(vcommon.AppDir, "plugins"), true)))
+
 	authorized := App.Group("/")
 	authorized.Use(vwebmiddlewares.AutoCookie())
 	{
@@ -42,11 +44,9 @@ func Init(assets embed.FS) {
 
 		authorized.StaticFS("/dashboard", http.FS(distFS))
 
-		authorized.GET("/assets/*filepath", vwebmiddlewares.AutoCookie(), func(c *gin.Context) {
+		authorized.GET("/assets/*filepath", func(c *gin.Context) {
 			c.FileFromFS(c.Request.URL.Path, http.FS(distFS))
 		})
-
-		authorized.Use(static.Serve("/plugins", static.LocalFile(path.Join(vcommon.AppDir, "plugins"), true)))
 	}
 }
 

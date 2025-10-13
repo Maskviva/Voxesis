@@ -34,12 +34,16 @@ export class BedrockMcServerStatus {
 
 export class Plugin {
     "PluginName": string;
+    "PluginType": PluginType;
     "Manifest": string;
 
     /** Creates a new Plugin instance. */
     constructor($$source: Partial<Plugin> = {}) {
         if (!("PluginName" in $$source)) {
             this["PluginName"] = "";
+        }
+        if (!("PluginType" in $$source)) {
+            this["PluginType"] = ("" as PluginType);
         }
         if (!("Manifest" in $$source)) {
             this["Manifest"] = "";
@@ -52,14 +56,24 @@ export class Plugin {
      * Creates a new Plugin instance from a string or object.
      */
     static createFrom($$source: any = {}): Plugin {
-        const $$createField1_0 = $Create.ByteSlice;
+        const $$createField2_0 = $Create.ByteSlice;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("Manifest" in $$parsedSource) {
-            $$parsedSource["Manifest"] = $$createField1_0($$parsedSource["Manifest"]);
+            $$parsedSource["Manifest"] = $$createField2_0($$parsedSource["Manifest"]);
         }
         return new Plugin($$parsedSource as Partial<Plugin>);
     }
 }
+
+export enum PluginType {
+    /**
+     * The Go zero value for the underlying type of the enum.
+     */
+    $zero = "",
+
+    View = "view",
+    Theme = "theme",
+};
 
 export class ProcessState {
     "pid": string;

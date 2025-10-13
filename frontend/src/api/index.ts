@@ -4,7 +4,17 @@ import Plugins from './plugins'
 import Utils from './utils'
 import Process from './process'
 
-export const Api = {
+const Api = {
+    Config,
+    Logger,
+    Plugins,
+    Process,
+    Utils
+}
+
+
+export {
+    Api,
     Config,
     Logger,
     Plugins,

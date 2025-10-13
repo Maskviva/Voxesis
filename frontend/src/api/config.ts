@@ -2,7 +2,7 @@ import * as ConfigIpc from "../../bindings/voxesis/src/Communication/InterProces
 import {ConfigType} from "../../bindings/voxesis/src/Common/Manager";
 import {envIsWails} from "./common";
 
-export async function SetValueOfKey(uuid: string, key: string, value: any, section: string) {
+export async function SetValueOfKey(uuid: string, key: string, value: any, section: string): Promise<string | null> {
     if (envIsWails) {
         return ConfigIpc.SetValueOfKey(uuid, key, value, section)
     } else {
@@ -23,7 +23,7 @@ export async function SetValueOfKey(uuid: string, key: string, value: any, secti
     }
 }
 
-export async function DelValueOfKey(uuid: string, key: string) {
+export async function DelValueOfKey(uuid: string, key: string): Promise<string | null> {
     if (envIsWails) {
         return ConfigIpc.DelValueOfKey(uuid, key)
     } else {
@@ -42,7 +42,7 @@ export async function DelValueOfKey(uuid: string, key: string) {
     }
 }
 
-export async function GetAllValue(uuid: string) {
+export async function GetAllValue(uuid: string): Promise<[any, string | null]> {
     if (envIsWails) {
         return ConfigIpc.GetAllValue(uuid)
     } else {
@@ -60,7 +60,7 @@ export async function GetAllValue(uuid: string) {
     }
 }
 
-export async function GetValueOfKey(uuid: string, key: string, section: string) {
+export async function GetValueOfKey(uuid: string, key: string, section: string): Promise<[string | null, string | null]> {
     if (envIsWails) {
         return ConfigIpc.GetValueOfKey(uuid, key, section)
     } else {
@@ -80,7 +80,7 @@ export async function GetValueOfKey(uuid: string, key: string, section: string) 
     }
 }
 
-export async function NewConfigManager(managerType: ConfigType, filePath: string, abs: boolean) {
+export async function NewConfigManager(managerType: ConfigType, filePath: string, abs: boolean): Promise<[string | null, string | null]> {
     if (envIsWails) {
         return ConfigIpc.NewConfigManager(managerType, filePath, abs)
     } else {

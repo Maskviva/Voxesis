@@ -8,7 +8,7 @@
         <li
             class="plugin-item"
             :class="{ 'active': selectedPlugin?.name == 'global_settings' }"
-            @click="selectedPlugin = {name: 'global_settings'} as PluginManifest">
+            @click="selectedPlugin = {name: 'global_settings'} as PluginItem">
           全局设置
         </li>
 
@@ -16,7 +16,7 @@
         " :key="plugin.name"
             class="plugin-item"
             :class="{ 'active': selectedPlugin?.name === plugin.name }"
-            @click="selectedPlugin = plugin as PluginManifest">
+            @click="selectedPlugin = plugin">
           {{ plugin.name }}
         </li>
 
@@ -36,7 +36,7 @@
         <div class="plugin-details-header">
           <div class="plugin-details-title">
             <a class="plugin-name fade-in-down " @click="appView.toggleView(selectedPlugin.name)">{{ selectedPlugin.name }}</a>
-            <p class="plugin-intro  fade-in-down delay-1">{{ selectedPlugin.introduce }}</p>
+            <p class="plugin-intro  fade-in-down delay-1">{{ selectedPlugin.Object.introduce }}</p>
           </div>
           <div class="plugin-details-actions fade-in-down delay-2">
             <button :disabled="viewStore.views.get(selectedPlugin.name).enable"
@@ -50,7 +50,7 @@
         <PluginSettingComp
             class="fade-in-up"
             :key="selectedPlugin.name"
-            :settings="selectedPlugin.settings"
+            :settings="selectedPlugin.Object.settings"
         />
       </div>
       <div v-else class="empty-state">
@@ -62,40 +62,23 @@
 </template>
 
 <script setup lang="ts">
-import {computed, inject, onMounted, ref} from 'vue';
-import {type PluginSetting, PluginSettingItem, usePluginListStore} from "../stores/plugin/PluginStore";
+import {computed, ComputedRef, inject, onMounted, ref} from 'vue';
+import {PluginItem, usePluginListStore} from "../stores/plugin/PluginStore";
 import {IconArchive2Line} from "birdpaper-icon";
 import PluginSettingComp from '../components/settingView/PluginSetting.vue';
 import {useViewStore} from "../stores/core/ViewStore";
-
-interface PluginManifest {
-  main: string;
-  name: string;
-  component: any;
-  introduce: string;
-  line_icon: string;
-  fill_icon: string;
-  settings: PluginSetting;
-}
+import {ViewPluginObject} from "../stores/plugin/ViewPlugin";
 
 const appView = inject<{ toggleView: (name: string) => void }>('AppViewMethod');
 const viewStore = useViewStore();
 
 const pluginListStore = usePluginListStore();
-const pluginList = computed(() => Array.from(pluginListStore.pluginList.values()));
-
-const selectedPlugin = ref<PluginManifest>({
-  main: '',
-  component: null,
+const pluginList: ComputedRef<PluginItem[]> = computed(() => Array.from(pluginListStore.pluginList.values()));
+const selectedPlugin = ref<PluginItem>({
   name: '',
-  introduce: '',
-  line_icon: '',
-  fill_icon: '',
-  settings: {
-    plate: '',
-    display: '',
-    items: [] as PluginSettingItem[],
-  }
+  type: 'view',
+  enable: true,
+  Object: {} as ViewPluginObject
 });
 
 onMounted(() => {

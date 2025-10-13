@@ -3,37 +3,39 @@ import {Component, markRaw, Ref, ref, toRef} from "vue";
 import InstanceView from "../../view/Instance.vue";
 import {IconArchive2Fill, IconArchive2Line, IconDatabaseFill, IconDatabaseLine} from "birdpaper-icon";
 import PluginManagerView from "../../view/PluginManager.vue";
+import {PluginItem} from "../plugin/PluginStore";
+import {ViewPluginObject} from "../plugin/ViewPlugin";
 
-export type ViewItem = {
-    name: string;
-    component: Component;
-    enable: boolean;
-    introduce: string;
-    line_icon: Component;
-    fill_icon: Component;
-}
 
-const defaultViews: ViewItem[] = [
+const defaultViews: PluginItem[] = [
     {
         name: 'instance',
-        component: markRaw(InstanceView),
-        introduce: "实例",
+        type: 'view',
         enable: true,
-        line_icon: markRaw(IconDatabaseLine),
-        fill_icon: markRaw(IconDatabaseFill),
+        Object: {
+            name: 'instance',
+            component: markRaw(InstanceView),
+            introduce: "实例",
+            line_icon: markRaw(IconDatabaseLine),
+            fill_icon: markRaw(IconDatabaseFill),
+        } as unknown as ViewPluginObject
     },
     {
         name: 'pluginManager',
-        component: markRaw(PluginManagerView),
-        introduce: "插件管理",
+        type: 'view',
         enable: true,
-        line_icon: markRaw(IconArchive2Line),
-        fill_icon: markRaw(IconArchive2Fill),
+        Object: {
+            name: 'instance',
+            component: markRaw(PluginManagerView),
+            introduce: "插件管理",
+            line_icon: markRaw(IconArchive2Line),
+            fill_icon: markRaw(IconArchive2Fill),
+        } as unknown as ViewPluginObject
     }
 ]
 
 export const useViewStore = defineStore('view', () => {
-    const views: Ref<Map<string, ViewItem>> = ref(new Map<string, ViewItem>())
+    const views: Ref<Map<string, PluginItem>> = ref(new Map<string, PluginItem>())
 
     async function LoadViews() {
         defaultViews.map(view => {
@@ -41,18 +43,9 @@ export const useViewStore = defineStore('view', () => {
         })
     }
 
-    async function AddView(view: ViewItem) {
-        if (view.component) {
-            const markedComponent = markRaw(view.component);
-
-            views.value.set(view.name, {
-                name: view.name,
-                component: markedComponent,
-                introduce: view.introduce,
-                enable: true,
-                line_icon: markRaw(view.line_icon),
-                fill_icon: markRaw(view.fill_icon),
-            })
+    async function AddView(view: PluginItem) {
+        if (view.Object.component) {
+            views.value.set(view.name, view)
         } else {
             throw new Error('Component is undefined or null for view:' + view.name);
         }
