@@ -1,0 +1,87 @@
+{
+  "name": "MyPlugin",
+  "main": "MyPlugin.js.json",
+  "introduce": "我的插件",
+  "plugin_type": "view",
+  "version": "v0.0.1",
+  "author": "MyName",
+  "repository": "https://114514hub.com/114514",
+
+  "line_icon": "IconUser3Line",
+  "fill_icon": "IconUser3Fill",
+  "settings": {
+    "items": [
+      {
+        "label": "文本输入框",
+        "type": "input",
+        "key": "input-text",
+        "value_type": "text",
+        "value": "input-text-value",
+        "placeholder": "input-text-placeholder"
+      },
+      {
+        "label": "密码输入框",
+        "type": "input",
+        "key": "input-password",
+        "value_type": "password",
+        "value": "input-password-value",
+        "placeholder": "input-password-placeholder"
+      },
+      {
+        "label": "数字输入框",
+        "type": "input",
+        "max": 100,
+        "min": 0,
+        "key": "input-number",
+        "value_type": "number",
+        "value": 0,
+        "placeholder": "input-number-placeholder"
+      },
+      {
+        "label": "下拉框",
+        "type": "drop_down",
+        "key": "drop_down",
+        "value": "drop-down-value",
+        "placeholder": "drop-down-placeholder",
+        "list": [
+          {
+            "label": "标签1",
+            "value": "值1"
+          },
+          {
+            "label": "标签2",
+            "value": "值2"
+          },
+          {
+            "label": "标签3",
+            "value": "值3"
+          }
+        ]
+      },
+      {
+        "label": "开关",
+        "type": "switch",
+        "key": "switch",
+        "value": true
+      },
+      {
+        "label": "目录选择器",
+        "type": "select_dir",
+        "key": "select_dir",
+        "value": "select-dir-value",
+        "placeholder": "select-dir-placeholder"
+      },
+      {
+        "label": "文件选择器",
+        "type": "select_file",
+        "key": "select_file",
+        "filters": {
+          "displayName": "图片",
+          "pattern": "*.png"
+        },
+        "value": "select-file-value",
+        "placeholder": "select-file-placeholder"
+      }
+    ]
+  }
+}

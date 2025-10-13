@@ -1,12 +1,12 @@
 package v_manager
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
 	vcommon "voxesis/src/Common"
 	entity "voxesis/src/Common/Entity"
-	vplugins "voxesis/src/Common/Plugins"
 )
 
 type PluginManager struct {
@@ -32,10 +32,12 @@ func (pm *PluginManager) LoadPlugins() error {
 
 	// 遍历插件目录
 	for _, pluginDir := range dir {
-		// 验证插件
-		if err := vplugins.ValiPlugin(pluginDir); err != nil {
-			return err
+		// 验证插件目录
+		if !pluginDir.IsDir() {
+			return fmt.Errorf("插件 %s 不是一个目录", pluginDir.Name())
 		}
+
+		var data = make(map[string]interface{})
 
 		// 读取插件的manifest.json文件
 		manifest, err := os.ReadFile(path.Join(vcommon.PluginDir, pluginDir.Name(), "/manifest.json"))
@@ -43,10 +45,20 @@ func (pm *PluginManager) LoadPlugins() error {
 			return err
 		}
 
+		err = json.Unmarshal(manifest, &data)
+		if err != nil {
+			return err
+		}
+
+		if data["name"] == nil || data["plugin_type"] == nil {
+			return fmt.Errorf("插件 %s 的manifest.json文件缺少必要字段", pluginDir.Name())
+		}
+
 		// 创建插件实体
 		pm.Plugins[pluginDir.Name()] = entity.Plugin{
 			PluginName: pluginDir.Name(),
 			Manifest:   manifest,
+			PluginType: entity.PluginType(data["plugin_type"].(string)),
 		}
 	}
 

@@ -1,55 +1,27 @@
-import * as Vue from "vue";
-import {defineAsyncComponent, markRaw, readonly, ref, toRef} from "vue";
+import {readonly, ref, toRef} from "vue";
 import {defineStore} from "pinia";
 import {ElNotification} from "element-plus";
-import * as WailsRunTime from '@wailsio/runtime';
-import Plugins, {GetPluginList, LoadPlugins} from "../../api/plugins";
-import Utils from "../../api/utils";
-import Config from "../../api/config";
-import {Api} from "../../api";
+import {GetPluginList, LoadPlugins} from "../../api/plugins";
+import {validViewPluginManifest, viewPluginLoader, ViewPluginManifest, ViewPluginObject} from "./ViewPlugin";
 
-declare const System: any;
-declare global {
-    interface Window {
-        System: any;
-    }
-}
-
-export type PluginSettingItem = {
-    label: string,
-    type: "input" | "drop_down" | "switch" | "select_dir" | "select_file",
-    key: string,
-    value_type?: "number" | "text" | "password",
-    title?: string,
-    filters?: {
-        displayName: string,
-        pattern: string,
-    },
-    filesList?: string[][],
-    value: string | boolean,
-    max?: number,
-    min?: number,
-    placeholder?: string,
-    list?: { label: string, value: string }[],
-};
-
-export type PluginSetting = {
-    plate: string,
-    display?: string,
-    items: PluginSettingItem[]
-};
-
-interface PluginManifest {
-    main: string;
+export interface BasePluginManifest {
     name: string;
-    component: any,
+    main: string;
     introduce: string;
-    line_icon: string;
-    fill_icon: string;
-    settings: PluginSetting;
+    plugin_type: 'view' | 'theme';
+    version: string;
+    author: string;
+    repository?: string;
 }
 
-function parseManifest(plugin_manifest: string): PluginManifest {
+export type PluginItem = {
+    name: string;
+    enable: boolean;
+    type: 'view' | 'theme';
+    Object: ViewPluginObject
+}
+
+function parseManifest(plugin_manifest: string): BasePluginManifest {
     const binaryString = atob(plugin_manifest);
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
@@ -67,83 +39,22 @@ function parseManifest(plugin_manifest: string): PluginManifest {
             manifestString = binaryString;
         }
     }
+
     return JSON.parse(manifestString);
 }
 
 function isValidManifest(manifest: any): boolean {
     return manifest &&
         typeof manifest.name === 'string' &&
+        typeof manifest.main === 'string' &&
         typeof manifest.introduce === 'string' &&
-        typeof manifest.line_icon === 'string' &&
-        typeof manifest.fill_icon === 'string';
-}
-
-async function pluginLoader(path: string) {
-    if (!path) return;
-
-    await new Promise<void>((resolve, reject) => {
-        if (window.System) return resolve();
-        const script = document.createElement('script');
-        script.src = 'lib/system.js';
-        script.onload = () => resolve();
-        script.onerror = _ => reject(new Error('无法加载 SystemJS 库'));
-        document.head.appendChild(script);
-    });
-
-    const vuePseudoURL = 'app://vue';
-    const wailsRunTimePseudoURL = "app://wailsRunTime";
-    const wailsIpcPseudoURL = 'app://wailsIpc';
-
-    const importMap = {
-        imports: {
-            "vue": vuePseudoURL,
-            "WailsRunTime": wailsRunTimePseudoURL,
-            "WailsIpc": wailsIpcPseudoURL,
-            "configipc": wailsIpcPseudoURL,
-            "fileipc": wailsIpcPseudoURL,
-            "logipc": wailsIpcPseudoURL,
-            "mcserveripc": wailsIpcPseudoURL,
-            "pluginipc": wailsIpcPseudoURL,
-            "processipc": wailsIpcPseudoURL,
-            "utilsipc": wailsIpcPseudoURL
-        }
-    };
-
-    if (!document.querySelector('script[type="systemjs-importmap"]')) {
-        const imScript = document.createElement('script');
-        imScript.type = 'systemjs-importmap';
-        imScript.textContent = JSON.stringify(importMap);
-        document.head.appendChild(imScript);
-        System.prepareImport();
-    }
-
-    const wailsIpcWithSubmodules = {
-        default: Api,
-        ConfigIpc: Config,
-        PluginIpc: Plugins,
-        ProcessIpc: {},
-        UtilsIpc: Utils
-    };
-
-    System.set(vuePseudoURL, Vue);
-    System.set(wailsRunTimePseudoURL, WailsRunTime);
-    System.set(wailsIpcPseudoURL, wailsIpcWithSubmodules);
-
-    const SourceFileResponse: Response = await fetch(path);
-    const SourceFile = await SourceFileResponse.json();
-    const blob = new Blob([SourceFile], {type: 'application/javascript'});
-    const url = URL.createObjectURL(blob);
-
-    try {
-        const module = await System.import(url);
-        return module.default;
-    } finally {
-        URL.revokeObjectURL(url);
-    }
+        typeof manifest.plugin_type === 'string' &&
+        typeof manifest.version === 'string' &&
+        typeof manifest.author === 'string'
 }
 
 export const usePluginListStore = defineStore('plugin', () => {
-    const pluginList = ref<Map<string, PluginManifest>>(new Map());
+    const pluginList = ref<Map<string, PluginItem>>(new Map());
 
     let _resolveLoading: (value: void | PromiseLike<void>) => void;
     let _rejectLoading: (reason?: any) => void;
@@ -155,27 +66,34 @@ export const usePluginListStore = defineStore('plugin', () => {
     });
 
     async function processSinglePlugin(plugin: any): Promise<void> {
-        const manifest = parseManifest(plugin.Manifest);
+        const manifest: BasePluginManifest = parseManifest(plugin.Manifest);
 
         if (!isValidManifest(manifest)) {
             throw new Error(`清单文件 (manifest) 格式无效`);
         }
 
         if (pluginList.value.has(manifest.name)) {
-            return;
+            throw new Error(`重复的插件: ${manifest.name}`);
         }
 
-        const pluginPath = `/plugins/${manifest.name}/${manifest.main}`;
-        const pluginComponent = defineAsyncComponent(() => pluginLoader(pluginPath));
+        switch (manifest.plugin_type) {
+            case 'view':
+                const viewManifest: ViewPluginManifest = validViewPluginManifest(manifest);
+                const viewPluginObject: ViewPluginObject = await viewPluginLoader(viewManifest)
 
-        const newPluginData = {
-            ...manifest,
-            component: markRaw(pluginComponent),
-            line_icon: manifest.line_icon,
-            fill_icon: manifest.fill_icon,
-        };
+                pluginList.value.set(manifest.name, {
+                    name: manifest.name,
+                    type: manifest.plugin_type,
+                    enable: true,
+                    Object: viewPluginObject
+                });
+                break;
+            case 'theme':
 
-        pluginList.value.set(manifest.name, newPluginData);
+                break;
+            default:
+                throw new Error(`来自插件 ${manifest.plugin_type} 的未知插件类型: ${manifest.plugin_type}`);
+        }
     }
 
     async function Load(): Promise<void> {
@@ -186,9 +104,10 @@ export const usePluginListStore = defineStore('plugin', () => {
 
         try {
             const err = await LoadPlugins();
-            if (err) throw new Error(`后端初始化插件失败: ${err}`);
+            if (err) throw new Error(err);
 
             const plugins = await GetPluginList();
+
             if (!plugins || plugins.length === 0) {
                 _resolveLoading();
                 return;

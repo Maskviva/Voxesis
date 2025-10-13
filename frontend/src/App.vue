@@ -25,9 +25,9 @@
   <ul ref="viewListBox" class="sidebar">
     <template v-for="item in viewStore.views.values()" :key="item.name">
       <li v-if="item.enable" class="item" @click="toggleView(item.name)">
-        <IconToggle :LineIcon="item.line_icon" :FillIcon="item.fill_icon" :Size="25"
+        <IconToggle :LineIcon="item.Object.line_icon" :FillIcon="item.Object.fill_icon" :Size="25"
                     :Toggle="view_component?.name == item.name"></IconToggle>
-        <span class="sidebar-text">{{ item.introduce }}</span>
+        <span class="sidebar-text">{{ item.Object.introduce }}</span>
       </li>
     </template>
 
@@ -56,7 +56,7 @@
     <transition name="fade" mode="out-in">
       <HomeView v-if="!view_component"></HomeView>
       <keep-alive include="instance" v-else>
-        <component :is="view_component!.component"/>
+        <component :is="view_component.Object.component"/>
       </keep-alive>
     </transition>
   </div>
@@ -66,7 +66,6 @@
 import {type Component, computed, onMounted, provide, ref, shallowRef} from 'vue';
 import {onClickOutside} from '@vueuse/core';
 
-import * as BirdpaperIcon from 'birdpaper-icon'
 import {
   IconCheckboxBlankLine,
   IconCheckboxMultipleBlankLine,
@@ -87,11 +86,11 @@ import {closeWin, WinMaxSize, winMinimize, winToggleMaximise} from "./utils/wind
 import {useSystemStateStore} from "./stores/core/SystemStateStore";
 import {SystemState} from "../bindings/voxesis/src/Common/Entity";
 import {useAppConfigStore} from "./stores/core/AppConfigStore";
-import {usePluginListStore} from "./stores/plugin/PluginStore";
-import {useViewStore, ViewItem} from "./stores/core/ViewStore";
+import {PluginItem, usePluginListStore} from "./stores/plugin/PluginStore";
+import {useViewStore} from "./stores/core/ViewStore";
 import {envIsWails} from "./api/common";
 
-const view_component = shallowRef<ViewItem | null>(null);
+const view_component = shallowRef<PluginItem | null>(null);
 const sidebar_before_top = ref("-50vh");
 const viewListBox = ref<HTMLElement | null>(null);
 
@@ -119,6 +118,7 @@ const toggleView = (viewName: string) => {
   const totalOffset = index * itemHeight + rootFontSize - 1;
 
   sidebar_before_top.value = totalOffset + "px";
+  
   view_component.value = targetView;
 };
 
@@ -129,14 +129,7 @@ onMounted(async () => {
   await systemStateStore.ListenState();
 
   [...pluginListStore.pluginList.values()].forEach(plugin => {
-    viewStore.AddView({
-      name: plugin.name,
-      component: plugin.component,
-      enable: true,
-      introduce: plugin.introduce,
-      line_icon: (BirdpaperIcon as any)[plugin.line_icon],
-      fill_icon: (BirdpaperIcon as any)[plugin.fill_icon]
-    })
+    viewStore.AddView(plugin)
   })
 });
 
