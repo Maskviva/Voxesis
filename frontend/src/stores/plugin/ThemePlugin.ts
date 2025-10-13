@@ -7,12 +7,7 @@ export type ThemePluginManifest = BasePluginManifest & {
 export type ThemePluginObject = {
     name: string;
     themes: string[];
-    variables: {
-        theme: string;
-        value: {
-            [key: string]: string;
-        };
-    }[];
+    variables: Map<string, { [key: string]: string; }>;
 }
 
 function parseCombinedThemeVariables(cssText: string): ThemePluginObject['variables'] {
@@ -25,18 +20,16 @@ function parseCombinedThemeVariables(cssText: string): ThemePluginObject['variab
 
     try {
         const sheet = styleElement.sheet;
-        if (!sheet) return [];
+        if (!sheet) return new Map();
 
         for (let i = 0; i < sheet.cssRules.length; i++) {
             const rule = sheet.cssRules[i];
             if (!(rule instanceof CSSStyleRule)) continue;
 
             const selectors = rule.selectorText.split(',').map(s => s.trim());
-
             const hasRoot = selectors.includes(':root');
-
-            // 找出所有 data-theme 选择器，并提取主题名
             const themeNames: string[] = [];
+
             for (const selector of selectors) {
                 const match = selector.match(/^\[data-theme="([^"]+)"\]$/);
                 if (match) {
@@ -44,22 +37,19 @@ function parseCombinedThemeVariables(cssText: string): ThemePluginObject['variab
                 }
             }
 
-            // 只有当规则同时包含 :root 和至少一个 [data-theme] 时才处理
             if (!hasRoot || themeNames.length === 0) continue;
 
-            for (let i = 0; i < rule.style.length; i++) {
-                const propName = rule.style[i];
-                if (!propName.startsWith('--')) return;
+            for (let j = 0; j < rule.style.length; j++) {
+                const propName = rule.style[j];
+
+                if (!propName.startsWith('--')) continue;
 
                 const propValue = rule.style.getPropertyValue(propName).trim();
-
-                // 将这个变量添加到这个规则块里找到的所有主题中
                 for (const themeName of themeNames) {
                     if (!themes[themeName]) {
                         themes[themeName] = {};
                     }
                     themes[themeName][propName] = propValue;
-
                 }
             }
         }
@@ -67,27 +57,28 @@ function parseCombinedThemeVariables(cssText: string): ThemePluginObject['variab
         document.head.removeChild(styleElement);
     }
 
-    // 将结果转换为您需要的数组格式
-    return Object.entries(themes).map(([theme, value]) => ({
-        theme,
-        value
-    }));
+    return new Map(Object.entries(themes));
 }
 
 export function validThemePluginManifest(json: BasePluginManifest): ThemePluginManifest {
-    if (!json || typeof json !== 'object') return null;
-
-    if (!Array.isArray((json as ThemePluginManifest).themes)) return null;
-
-    if (!(json as ThemePluginManifest).themes.every(theme => typeof theme === 'string')) return null;
-
+    if (!json || typeof json !== 'object') {
+        throw new Error('清单文件 (manifest) 必须是一个对象');
+    }
+    if (!Array.isArray((json as ThemePluginManifest).themes)) {
+        throw new Error('清单文件 (manifest) 中的 "themes" 必须是一个数组');
+    }
+    if (!(json as ThemePluginManifest).themes.every(theme => typeof theme === 'string')) {
+        throw new Error('清单文件 (manifest) "themes" 数组中的所有元素都必须是字符串');
+    }
     return json as ThemePluginManifest;
 }
 
 export async function themePluginLoader(manifest: ThemePluginManifest): Promise<ThemePluginObject> {
     const pluginPath = `/plugins/${manifest.name}/${manifest.main}`;
     const res = await fetch(pluginPath);
-    if (!res.ok) return;
+    if (!res.ok) {
+        throw new Error(`无法加载主题插件 ${manifest.name} 的源文件: ${res.statusText}`);
+    }
     const cssText = await res.text();
 
     const rootVars = parseCombinedThemeVariables(cssText);

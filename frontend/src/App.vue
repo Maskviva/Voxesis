@@ -86,7 +86,7 @@ import {closeWin, WinMaxSize, winMinimize, winToggleMaximise} from "./utils/wind
 import {useSystemStateStore} from "./stores/core/SystemStateStore";
 import {SystemState} from "../bindings/voxesis/src/Common/Entity";
 import {useAppConfigStore} from "./stores/core/AppConfigStore";
-import {ThemePluginItem, usePluginListStore, ViewPluginItem} from "./stores/plugin/PluginStore";
+import {usePluginListStore, ViewPluginItem} from "./stores/plugin/PluginStore";
 import {useViewStore} from "./stores/core/ViewStore";
 import {envIsWails} from "./api/common";
 import {useThemeStore} from "./stores/core/ThemeStore";
@@ -123,37 +123,12 @@ const toggleView = (viewName: string) => {
 };
 
 onMounted(async () => {
+  // 加载所以Store
   await viewStore.Load();
   await pluginListStore.Load();
   await appConfigStore.Load();
   await themeStore.Load(appConfigStore);
   await systemStateStore.ListenState();
-
-  // 加载视图插件到 useViewStore
-  [...pluginListStore.viewPluginList.values()].forEach(plugin => {
-    viewStore.AddView(plugin);
-  });
-
-  // 加载主题插件到 useThemeStore
-  [...pluginListStore.themePluginList.values()].forEach((plugin: ThemePluginItem) => {
-    let variableCache: { [key: string]: string }[] = []
-
-    plugin.Object.themes.forEach(theme => {
-      variableCache = []
-      plugin.Object.variables.forEach(variable => {
-        if (variable.theme != theme) return;
-        variableCache.push(variable.value);
-      })
-
-      if (variableCache.length == 0) return;
-
-      themeStore.AddTheme({
-        name: theme,
-        type: 'custom',
-        variables: variableCache,
-      });
-    })
-  });
 });
 
 provide('AppViewMethod', {

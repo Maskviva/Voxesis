@@ -5,6 +5,9 @@ import {GetPluginList, LoadPlugins} from "../../api/plugins";
 import {validViewPluginManifest, viewPluginLoader, ViewPluginManifest, ViewPluginObject} from "./ViewPlugin";
 import {themePluginLoader, ThemePluginManifest, ThemePluginObject, validThemePluginManifest} from "./ThemePlugin";
 
+import {useViewStore} from "../core/ViewStore";
+import {useThemeStore} from "../core/ThemeStore";
+
 export interface BasePluginManifest {
     name: string;
     main: string;
@@ -30,6 +33,7 @@ export type ThemePluginItem = {
 }
 
 export type PluginItem = ViewPluginItem | ThemePluginItem;
+
 
 function parseManifest(plugin_manifest: string): BasePluginManifest {
     const binaryString = atob(plugin_manifest);
@@ -68,61 +72,67 @@ export const usePluginListStore = defineStore('plugin', () => {
     const themePluginList = ref<Map<string, ThemePluginItem>>(new Map());
     const viewPluginList = ref<Map<string, ViewPluginItem>>(new Map());
 
-    let _resolveLoading: (value: void | PromiseLike<void>) => void;
-    let _rejectLoading: (reason?: any) => void;
-    let isLoadTriggered = false;
+    const viewStore = useViewStore();
+    const themeStore = useThemeStore();
 
-    const loadingPromise: Promise<void> = new Promise((resolve, reject) => {
+    let _resolveLoading: (value: void | PromiseLike<void>) => void;
+    let isLoadTriggered = false;
+    const loadingPromise: Promise<void> = new Promise((resolve) => {
         _resolveLoading = resolve;
-        _rejectLoading = reject;
     });
 
     async function processSinglePlugin(plugin: any): Promise<void> {
         const manifest: BasePluginManifest = parseManifest(plugin.Manifest);
 
         if (!isValidManifest(manifest)) throw new Error(`清单文件 (manifest) 格式无效`);
-
         if (pluginList.value.has(manifest.name)) throw new Error(`重复的插件: ${manifest.name}`);
 
-        switch (manifest.plugin_type) {
-            case 'view':
-                const viewManifest: ViewPluginManifest = validViewPluginManifest(manifest);
-                const viewPluginObject: ViewPluginObject = await viewPluginLoader(viewManifest)
+        let newPluginItem: PluginItem;
 
-                viewPluginList.value.set(manifest.name, {
+        switch (manifest.plugin_type) {
+            case 'view': {
+                const viewManifest: ViewPluginManifest = validViewPluginManifest(manifest);
+                const viewPluginObject: ViewPluginObject = await viewPluginLoader(viewManifest);
+
+                const viewPluginItem: ViewPluginItem = {
                     name: manifest.name, type: 'view',
                     enable: true,
                     Object: viewPluginObject
-                });
+                };
+
+                viewPluginList.value.set(manifest.name, viewPluginItem);
+
+                viewStore.AddView(viewPluginItem);
+
+                newPluginItem = viewPluginItem;
                 break;
-            case 'theme':
+            }
+            case 'theme': {
                 const themeManifest: ThemePluginManifest = validThemePluginManifest(manifest);
-                const themePluginObject: ThemePluginObject = await themePluginLoader(themeManifest)
- 
-                themePluginList.value.set(manifest.name, {
-                    name: manifest.name,
-                    type: 'theme',
+                const themePluginObject: ThemePluginObject = await themePluginLoader(themeManifest);
+
+                const themePluginItem: ThemePluginItem = {
+                    name: manifest.name, type: 'theme',
                     enable: true,
                     Object: themePluginObject
-                })
+                };
+
+                themePluginList.value.set(manifest.name, themePluginItem);
+
+                themeStore.AddThemesFromPlugin(themePluginObject);
+
+                newPluginItem = themePluginItem;
                 break;
+            }
             default:
-                throw new Error(`来自插件 ${manifest.plugin_type} 的未知插件类型: ${manifest.plugin_type}`);
+                throw new Error(`来自插件 ${manifest.name} 的未知插件类型: ${manifest.plugin_type}`);
         }
 
-        pluginList.value.set(manifest.name, {
-            name: manifest.name,
-            enable: true,
-            type: manifest.plugin_type,
-            Object: manifest.plugin_type == 'view'
-                ? viewPluginList.value.get(manifest.name).Object
-                : themePluginList.value.get(manifest.name).Object
-        } as PluginItem);
+        pluginList.value.set(manifest.name, newPluginItem);
     }
 
     async function Load(): Promise<void> {
         if (isLoadTriggered) return loadingPromise;
-
         isLoadTriggered = true;
 
         try {
@@ -131,23 +141,25 @@ export const usePluginListStore = defineStore('plugin', () => {
 
             const plugins = await GetPluginList();
 
-            if (!plugins || plugins.length === 0) return _resolveLoading();
+            if (!plugins || plugins.length === 0) {
+                _resolveLoading();
+                return;
+            }
 
             const processingResults = await Promise.allSettled(
                 plugins.map(plugin => processSinglePlugin(plugin))
             );
 
             processingResults.forEach((result, index) => {
-                if (!(result.status === 'rejected')) return
-
-                const pluginName = plugins[index]?.PluginName || '未知插件';
-
-                ElNotification({
-                    title: '插件加载失败',
-                    message: `插件 ${pluginName}: ${result.reason.message}`,
-                    type: 'error',
-                    position: 'bottom-right'
-                });
+                if (result.status === 'rejected') {
+                    const pluginName = plugins[index]?.PluginName || '未知插件';
+                    ElNotification({
+                        title: '插件加载失败',
+                        message: `插件 ${pluginName}: ${result.reason.message}`,
+                        type: 'error',
+                        position: 'bottom-right'
+                    });
+                }
             });
 
             _resolveLoading();
@@ -159,15 +171,14 @@ export const usePluginListStore = defineStore('plugin', () => {
                 type: 'error',
                 position: 'bottom-right'
             });
-            _rejectLoading(error);
             throw error;
         }
     }
 
     return {
-        pluginList: toRef(pluginList),
-        themePluginList: toRef(themePluginList),
-        viewPluginList: toRef(viewPluginList),
+        pluginList: toRef(readonly(pluginList)),
+        themePluginList: toRef(readonly(themePluginList)),
+        viewPluginList: toRef(readonly(viewPluginList)),
         loadingPromise: readonly(loadingPromise),
         Load,
     };

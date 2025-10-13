@@ -16,7 +16,7 @@
         " :key="plugin.name"
             class="plugin-item"
             :class="{ 'active': selectedPlugin?.name === plugin.name }"
-            @click="selectedPlugin = plugin">
+            @click="selectedPlugin = plugin as ViewPluginItem">
           {{ plugin.name }}
         </li>
 
@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ComputedRef, inject, onMounted, ref, watch} from 'vue';
+import {computed, inject, onMounted, ref, watch} from 'vue';
 import {usePluginListStore, type ViewPluginItem} from "../stores/plugin/PluginStore";
 import {IconArchive2Line} from "birdpaper-icon";
 import PluginSettingComp from '../components/settingView/PluginSetting.vue';
@@ -82,7 +82,9 @@ const viewStore = useViewStore();
 
 const pluginListStore = usePluginListStore();
 const themeStore = useThemeStore();
-const pluginList: ComputedRef<ViewPluginItem[]> = computed(() => Array.from(pluginListStore.viewPluginList.values()));
+const pluginList = computed(() =>
+    Array.from(pluginListStore.viewPluginList.values())
+);
 const selectedPlugin = ref<ViewPluginItem>({
   name: '',
   type: 'view',
@@ -108,7 +110,7 @@ watch(theme, () => {
 
 onMounted(() => {
   if (pluginList.value.length > 0) {
-    selectedPlugin.value = pluginList.value[0];
+    selectedPlugin.value = pluginList[0];
   }
 });
 </script>
