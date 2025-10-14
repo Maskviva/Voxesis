@@ -1,11 +1,12 @@
 import * as Vue from 'vue'
 import {type Component, defineAsyncComponent, markRaw} from 'vue'
 import * as WailsRunTime from '@wailsio/runtime'
-import {Config, Logger, Plugins, Process, Utils} from "../../api";
+import {Config, frontends, Logger, Plugins, Process, Utils} from "../../api";
 
 import {BasePluginManifest} from "./PluginStore";
 import * as BirdpaperIcon from "birdpaper-icon";
 
+// 字符串输入框
 export type String_PasswordInputSetting = {
     label: string;
     type: "input";
@@ -15,6 +16,7 @@ export type String_PasswordInputSetting = {
     placeholder: string;
 };
 
+// 数字输入框
 export type NumberInputSetting = {
     label: string;
     type: "input";
@@ -26,6 +28,7 @@ export type NumberInputSetting = {
     placeholder: string;
 };
 
+// 下拉框
 export type DropDownSetting = {
     label: string;
     type: "drop_down";
@@ -38,6 +41,7 @@ export type DropDownSetting = {
     }[]
 };
 
+// 开关
 export type SwitchSetting = {
     label: string;
     type: "switch";
@@ -45,6 +49,7 @@ export type SwitchSetting = {
     value: boolean;
 };
 
+// 文件夹选择器
 export type SelectDirSetting = {
     label: string;
     type: "select_dir";
@@ -55,6 +60,7 @@ export type SelectDirSetting = {
     placeholder: string;
 };
 
+// 文件选择器
 export type SelectFileSetting = {
     label: string;
     type: "select_file";
@@ -100,10 +106,12 @@ declare global {
     }
 }
 
+// 伪url
 const vuePseudoURL = 'app://vue';
 const wailsRunTimePseudoURL = "app://wailsRunTime";
 const wailsIpcBaseURL = 'app://wailsIpc/';
 
+// 创建导入映射
 const importMap = {
     imports: {
         "vue": vuePseudoURL,
@@ -112,10 +120,12 @@ const importMap = {
         "VLoggerAPI": wailsIpcBaseURL + "Logger",
         "VPluginAPI": wailsIpcBaseURL + "Plugin",
         "VProcessAPI": wailsIpcBaseURL + "Process",
-        "VUtilsAPI": wailsIpcBaseURL + "Utils"
+        "VUtilsAPI": wailsIpcBaseURL + "Utils",
+        "VFrontendApi": wailsIpcBaseURL + "Frontend",
     }
 };
 
+// 验证插件设置项
 function isPluginSettingItem(item: any): item is PluginSettingItem {
     if (typeof item !== 'object' || item === null) return false;
 
@@ -123,6 +133,7 @@ function isPluginSettingItem(item: any): item is PluginSettingItem {
     if (typeof item.label !== 'string' ||
         typeof item.key !== 'string') return false;
 
+    // 类型检查
     switch (item.type) {
         case "input":
             if (item.value_type === "text" || item.value_type === "password") {
@@ -156,12 +167,14 @@ function isPluginSettingItem(item: any): item is PluginSettingItem {
     }
 }
 
+// 验证插件清单文件
 function isValidManifest(manifest: ViewPluginManifest): boolean {
     return typeof manifest.line_icon === 'string' &&
         typeof manifest.fill_icon === 'string' &&
         typeof manifest.settings === 'object';
 }
 
+// 设置 System 的导入模块
 function setSystemModels(System: any) {
     System.set(vuePseudoURL, Vue);
     System.set(wailsRunTimePseudoURL, WailsRunTime);
@@ -170,13 +183,19 @@ function setSystemModels(System: any) {
     System.set(wailsIpcBaseURL + "Plugin", {default: Plugins});
     System.set(wailsIpcBaseURL + "Process", {default: Process});
     System.set(wailsIpcBaseURL + "Utils", {default: Utils});
+    System.set(wailsIpcBaseURL + "Frontend", {default: frontends});
 }
 
+/**
+ * 验证视图插件的清单文件
+ * @param json
+ */
 export function validViewPluginManifest(json: BasePluginManifest): ViewPluginManifest {
     if (!isValidManifest(json as ViewPluginManifest)) {
         throw new Error(`${json.name} 的清单文件 (manifest) 格式无效`);
     }
 
+    // 遍历插件设置项
     for (const item of (json as ViewPluginManifest).settings.items) {
         if (!isPluginSettingItem(item)) {
             throw new Error(`${json.name} 的第 ${(json as ViewPluginManifest).settings.items.indexOf(item)} 个 item 无效:`, item);
@@ -186,9 +205,15 @@ export function validViewPluginManifest(json: BasePluginManifest): ViewPluginMan
     return json as ViewPluginManifest;
 }
 
+/**
+ * 加载视图插件
+ * @param manifest
+ */
 export async function viewPluginLoader(manifest: ViewPluginManifest): Promise<ViewPluginObject> {
+    // 获取插件路径
     const pluginPath = `/plugins/${manifest.name}/${manifest.main}`;
 
+    // 等待 SystemJS 加载完成
     await new Promise<void>((resolve, reject) => {
         if (window.System) return resolve();
         const script = document.createElement('script');
@@ -198,6 +223,7 @@ export async function viewPluginLoader(manifest: ViewPluginManifest): Promise<Vi
         document.head.appendChild(script);
     });
 
+    // 创建导入映射
     if (!document.querySelector('script[type="systemjs-importmap"]')) {
         const imScript = document.createElement('script');
         imScript.type = 'systemjs-importmap';
@@ -206,13 +232,16 @@ export async function viewPluginLoader(manifest: ViewPluginManifest): Promise<Vi
         System.prepareImport();
     }
 
+    // 设置 System 的导入模块
     setSystemModels(System)
 
+    // 获取插件源文件
     const SourceFileResponse: Response = await fetch(pluginPath);
     const SourceFile = await SourceFileResponse.json();
     const blob = new Blob([SourceFile], {type: 'application/javascript'});
     const url = URL.createObjectURL(blob);
 
+    // 加载插件
     try {
         const _module = await System.import(url);
         const pluginComponent = defineAsyncComponent({

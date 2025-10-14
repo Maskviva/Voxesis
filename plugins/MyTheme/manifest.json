@@ -6,6 +6,14 @@
   "version": "v0.0.1",
   "author": "MyName",
   "repository": "https://114514hub.com/114514",
-
-  "themes": ["demo", "demo2"]
+  "themes": [
+    {
+      "name": "Demo1",
+      "theme": "demoa"
+    },
+    {
+      "name": "Demo2",
+      "theme": "demob"
+    }
+  ]
 }

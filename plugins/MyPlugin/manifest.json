@@ -11,7 +11,6 @@
   "fill_icon": "IconUser3Fill",
   "settings": {
     "plate": "我的插件",
-    "display": "grid",
     "items": [
       {
         "label": "文本输入框",

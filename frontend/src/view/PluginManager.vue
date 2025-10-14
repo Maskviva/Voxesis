@@ -28,32 +28,48 @@
     </div>
 
     <div class="plugin-manager-content">
-      <div class="plugin-details" v-if="selectedPlugin.name == 'global_settings'">
-        <h1 class="plugin-name fade-in-down">全局设置</h1>
-        <p class="plugin-intro fade-in-down delay-1">对原生Voxesis进行设置。</p>
+      <GlobalSettings v-if="selectedPlugin.name == 'global_settings'"></GlobalSettings>
 
-        <div>
-          <p>主题</p>
-          <DropDown v-model:value="theme" :list="themeList"></DropDown>
-        </div>
-
-      </div>
       <div v-else-if="selectedPlugin && selectedPlugin.name" :key="selectedPlugin.name" class="plugin-details">
         <div class="plugin-details-header">
+
           <div class="plugin-details-title">
-            <a class="plugin-name fade-in-down " @click="appView.toggleView(selectedPlugin.name)">{{ selectedPlugin.name }}</a>
-            <p class="plugin-intro  fade-in-down delay-1">{{ selectedPlugin.Object.introduce }}</p>
+            <div class="fade-in-down delay-1 flex" @click="appView.toggleView(selectedPlugin.name)">
+              <a class="plugin-name">{{ selectedPlugin.name }} </a>
+
+              <IconGithubFill class="pointer" size="30" v-if="selectedPlugin.Object.repository"
+                              @click="openGit(selectedPlugin.Object.repository)"/>
+            </div>
+
+            <p class="plugin-intro  fade-in-down ">{{ selectedPlugin.Object.introduce }}</p>
           </div>
+
           <div class="plugin-details-actions fade-in-down delay-2">
-            <button :disabled="viewStore.views.get(selectedPlugin.name).enable"
-                    @click="viewStore.views.get(selectedPlugin.name).enable = true">启用
+            <button :disabled="pluginListStore.pluginList.get(selectedPlugin.name).enable"
+                    @click="pluginListStore.SetEnable(selectedPlugin.name, true)">启用
             </button>
-            <button :disabled="!viewStore.views.get(selectedPlugin.name).enable"
-                    @click="viewStore.views.get(selectedPlugin.name).enable = false">禁用
+            <button :disabled="!pluginListStore.pluginList.get(selectedPlugin.name).enable"
+                    @click="pluginListStore.SetEnable(selectedPlugin.name, false)">禁用
             </button>
+          </div>
+
+        </div>
+
+        <div class="plugin-info fade-in-up">
+          <div class="info-item">
+            <IconUserLine size="16" class="info-icon" />
+            <span class="info-label">作者:</span>
+            <span class="info-value">{{ selectedPlugin.Object.author }}</span>
+          </div>
+          <div class="info-item">
+            <IconGitBranchLine size="16" class="info-icon" />
+            <span class="info-label">版本:</span>
+            <span class="info-value">{{ selectedPlugin.Object.version }}</span>
           </div>
         </div>
+
         <PluginSettingComp
+            v-if="selectedPlugin.type == 'view'"
             class="fade-in-up"
             :key="selectedPlugin.name"
             :settings="selectedPlugin.Object.settings"
@@ -68,49 +84,39 @@
 </template>
 
 <script setup lang="ts">
-import {computed, inject, onMounted, ref, watch} from 'vue';
-import {usePluginListStore, type ViewPluginItem} from "../stores/plugin/PluginStore";
-import {IconArchive2Line} from "birdpaper-icon";
+import {computed, inject, onMounted, ref} from 'vue';
+import {type PluginItem, usePluginListStore, ViewPluginItem} from "../stores/plugin/PluginStore";
+import {IconArchive2Line, IconGithubFill, IconUserLine, IconGitBranchLine} from "birdpaper-icon";
 import PluginSettingComp from '../components/settingView/PluginSetting.vue';
-import {useViewStore} from "../stores/core/ViewStore";
 import {ViewPluginObject} from "../stores/plugin/ViewPlugin";
-import DropDown from "../components/custom/DropDown.vue";
-import {useThemeStore} from "../stores/core/ThemeStore";
+import GlobalSettings from "../components/settingView/GlobalSettings.vue";
+import {envIsWails} from "../api/common";
+import {Browser} from "@wailsio/runtime";
 
 const appView = inject<{ toggleView: (name: string) => void }>('AppViewMethod');
-const viewStore = useViewStore();
-
 const pluginListStore = usePluginListStore();
-const themeStore = useThemeStore();
 const pluginList = computed(() =>
-    Array.from(pluginListStore.viewPluginList.values())
+    Array.from(pluginListStore.pluginList.values())
 );
-const selectedPlugin = ref<ViewPluginItem>({
+
+const selectedPlugin = ref<PluginItem>({
   name: '',
   type: 'view',
   enable: true,
   Object: {} as ViewPluginObject
 });
 
-const theme = ref()
-
-const themeList: {
-  label: string;
-  value: string | number | boolean;
-}[] = Array.from(themeStore.Themes).map(([_, value]) => {
-  return {
-    label: value.name,
-    value: value.name
+function openGit(url: string) {
+  if (envIsWails) {
+    Browser.OpenURL(url)
+  } else {
+    window.open(url)
   }
-})
-
-watch(theme, () => {
-  themeStore.ToggleTheme(theme.value)
-})
+}
 
 onMounted(() => {
   if (pluginList.value.length > 0) {
-    selectedPlugin.value = pluginList[0];
+    selectedPlugin.value = pluginList.value[0] as PluginItem;
   }
 });
 </script>
@@ -259,6 +265,38 @@ onMounted(() => {
 .plugin-details-actions button:first-child:hover:not(:disabled) {
   background-color: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
+}
+
+.plugin-info {
+  display: flex;
+  gap: var(--spacing-lg);
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-background-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  align-items: center;
+}
+
+.info-item {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
+.info-icon {
+  color: var(--color-text-tertiary);
+}
+
+.info-label {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.info-value {
+  color: var(--color-text);
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-weight: var(--font-weight-semibold);
 }
 
 .empty-state {

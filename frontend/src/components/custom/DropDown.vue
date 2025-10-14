@@ -13,22 +13,31 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue';
 
+type Values = string | number | boolean;
+
 const props = defineProps<{
   value?: string;
-  list: { label: string; value: string | number | boolean }[];
+  list: { label: string; value: Values }[];
   placeholder?: string;
+  callback?: (label: string ,value: Values) => void;
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:value', value: string | number | boolean): void;
+  (e: 'update:value', value: Values): void;
 }>();
 
 const arrow = ref<HTMLElement | null>(null);
 const dropDown = ref<HTMLElement | null>(null);
 const dropDownList = ref<HTMLElement | null>(null);
+const fakeValue = ref<Values>();
 
 const selectedLabel = computed(() => {
-  const selectedItem = props.list.find(item => item.value === props.value);
+  if (props.value !== undefined) {
+    const selectedItem = props.list.find(item => item.value === props.value);
+    return selectedItem ? selectedItem.label : '';
+  }
+
+  const selectedItem = props.list.find(item => item.value === fakeValue.value);
   return selectedItem ? selectedItem.label : '';
 });
 
@@ -37,8 +46,13 @@ const openDropDown = () => {
   else dropDownList.value?.classList.add('open');
 };
 
-const selectItem = (item: { label: string; value: string | number | boolean }) => {
-  emit('update:value', item.value);
+const selectItem = (item: { label: string; value: Values }) => {
+  if (props.value !== undefined) {
+    emit('update:value', item.value);
+  }
+
+  fakeValue.value = item.value;
+  props.callback?.(item.label, item.value);
   dropDownList.value?.classList.remove('open');
 };
 

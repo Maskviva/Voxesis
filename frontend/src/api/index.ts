@@ -3,13 +3,15 @@ import Logger from './logger'
 import Plugins from './plugins'
 import Utils from './utils'
 import Process from './process'
+import {frontends} from "./frontends";
 
 const Api = {
     Config,
     Logger,
     Plugins,
     Process,
-    Utils
+    Utils,
+    frontends
 }
 
 
@@ -19,7 +21,8 @@ export {
     Logger,
     Plugins,
     Process,
-    Utils
+    Utils,
+    frontends
 }
 
 export default {
@@ -27,5 +30,6 @@ export default {
     Logger,
     Plugins,
     Process,
-    Utils
+    Utils,
+    frontends
 }
