@@ -123,7 +123,7 @@ const toggleView = (viewName: string) => {
 };
 
 onMounted(async () => {
-  // 加载所以Store
+  // 加载所有Store
   await viewStore.Load();
   await pluginListStore.Load();
   await appConfigStore.Load();

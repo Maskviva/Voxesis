@@ -29,3 +29,13 @@ func (u *UtilsIpc) GetBeServerStatus(host string, port uint16) *entity.BedrockMc
 
 	return status
 }
+
+func (u *UtilsIpc) HttpRequest(options vutils.HttpRequestOptions) (*string, *string) {
+	request, err := vutils.HttpRequest(options)
+	if err != nil {
+		e := err.Error()
+		return nil, &e
+	}
+
+	return &request, nil
+}

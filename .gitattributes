@@ -1,0 +1,7 @@
+*.vue linguist-language=Vue
+*.ts linguist-language=TypeScript
+*.d.ts linguist-language=TypeScript
+*.tsx linguist-language=TypeScript
+*.js linguist-language=JavaScript
+*.jsx linguist-language=JavaScript
+*.go linguist-language=Go

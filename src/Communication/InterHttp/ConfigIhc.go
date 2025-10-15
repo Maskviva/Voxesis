@@ -42,21 +42,22 @@ func (c *Config) GetValueOfKey(context *gin.Context) {
 	var data map[string]string
 
 	if err := context.ShouldBindJSON(&data); err != nil {
-		context.JSON(400, gin.H{"error": err.Error()})
+		context.JSON(500, []interface{}{nil, err.Error()})
 		return
 	}
 
-	if data["uuid"] == "" || data["key"] == "" || data["value"] == "" || data["section"] == "" {
-		context.JSON(400, gin.H{"error": "missing required fields"})
+	if data["uuid"] == "" || data["key"] == "" {
+		context.JSON(400, []interface{}{nil, "missing required fields"})
 		return
 	}
 
-	if err := communication.ConfigIpc.SetValueOfKey(data["uuid"], data["key"], data["value"], data["section"]); err != nil {
-		context.JSON(400, gin.H{"error": *err})
+	value, err := communication.ConfigIpc.GetValueOfKey(data["uuid"], data["key"], data["section"])
+	if err != nil {
+		context.JSON(400, []interface{}{nil, err})
 		return
 	}
 
-	context.JSON(200, nil)
+	context.JSON(200, []interface{}{value, nil})
 }
 
 func (c *Config) GetAllValue(context *gin.Context) {
@@ -85,18 +86,18 @@ func (c *Config) SetValueOfKey(context *gin.Context) {
 	var data map[string]string
 
 	if err := context.ShouldBindJSON(&data); err != nil {
-		context.JSON(400, gin.H{"error": err.Error()})
+		context.JSON(400, err.Error())
 		return
 	}
 
 	if data["uuid"] == "" {
-		context.JSON(400, gin.H{"error": "missing required fields"})
+		context.JSON(400, "missing required fields")
 		return
 	}
 
 	err := communication.ConfigIpc.SetValueOfKey(data["uuid"], data["key"], data["value"], data["section"])
 	if err != nil {
-		context.JSON(400, gin.H{"error": *err})
+		context.JSON(400, err)
 		return
 	}
 
@@ -107,18 +108,18 @@ func (c *Config) DelValueOfKey(context *gin.Context) {
 	var data map[string]string
 
 	if err := context.ShouldBindJSON(&data); err != nil {
-		context.JSON(400, gin.H{"error": err.Error()})
+		context.JSON(400, err.Error())
 		return
 	}
 
 	if data["uuid"] == "" {
-		context.JSON(400, gin.H{"error": "missing required fields"})
+		context.JSON(400, "missing required fields")
 		return
 	}
 
 	err := communication.ConfigIpc.DelValueOfKey(data["uuid"], data["key"])
 	if err != nil {
-		context.JSON(400, gin.H{"error": *err})
+		context.JSON(400, err)
 		return
 	}
 

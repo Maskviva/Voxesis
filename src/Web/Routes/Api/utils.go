@@ -10,5 +10,6 @@ func Utils(group *gin.RouterGroup) {
 	ctrl := &vwebcontroller.Utils{}
 
 	group.GET("/GetSystemState", ctrl.GetSystemState)
-	group.GET("/GetBeServerStatus", ctrl.GetBeServerStatus)
+	group.POST("/GetBeServerStatus", ctrl.GetBeServerStatus)
+	group.POST("/HttpRequest", ctrl.HttpRequest)
 }

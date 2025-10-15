@@ -8,6 +8,9 @@ import {Call as $Call, Create as $Create} from "@wailsio/runtime";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
 import * as entity$0 from "../../Common/Entity/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as v_utils$0 from "../../Common/Utils/models.js";
 
 export function GetBeServerStatus(host: string, port: number): Promise<entity$0.BedrockMcServerStatus | null> & { cancel(): void } {
     let $resultPromise = $Call.ByID(3138424375, host, port) as any;
@@ -25,6 +28,11 @@ export function GetSystemState(): Promise<entity$0.SystemState | null> & { cance
     }) as any;
     $typingPromise.cancel = $resultPromise.cancel.bind($resultPromise);
     return $typingPromise;
+}
+
+export function HttpRequest(options: v_utils$0.HttpRequestOptions): Promise<[string | null, string | null]> & { cancel(): void } {
+    let $resultPromise = $Call.ByID(4158981214, options) as any;
+    return $resultPromise;
 }
 
 // Private type creation functions
